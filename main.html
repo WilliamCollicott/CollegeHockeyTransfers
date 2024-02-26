@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CollegeHockeyTransfers</title>
+</head>
+<body>
+    <h1>Welcome to CollegeHockeyTransfers!</h1>
+    <p> Have you found yourself picking up your phone multiple times per day to check social media, news sites like CHN, USCHO, etc., your favorite team's homepage, and more? Do you wish you could get notified as soon as a player associated with your favorite team(s) commits, transfers, or goes pro? If yes, then you're in luck! CollegeHockeyTransfers is a free service that will automatically send you an email each time a player transfers to or from a team you've signed up for updates from.</p>
+
+    <p>Sign up for an entire conference:</p>
+    <input type="checkbox" id="CCHA" onclick="clickConference('CCHA')">
+    <label for="CCHA">CCHA</label><br>
+    <input type="checkbox" id="BigTen" onclick="clickConference('BigTen')">
+    <label for="BigTen">Big Ten</label><br>
+    <input type="checkbox" id="NCHC" onclick="clickConference('NCHC')">
+    <label for="NCHC">NCHC</label><br>
+    <input type="checkbox" id="ECAC" onclick="clickConference('ECAC')">
+    <label for="ECAC">ECAC</label><br>
+    <input type="checkbox" id="HockeyEast" onclick="clickConference('HockeyEast')">
+    <label for="HockeyEast">Hockey East</label><br>
+    <input type="checkbox" id="AtlanticHockey" onclick="clickConference('AtlanticHockey')">
+    <label for="AtlanticHockey">Atlantic Hockey</label><br>
+    <input type="checkbox" id="Independents" onclick="clickConference('Independents')">
+    <label for="Independents">Independents</label><br>
+
+    <p>Sign up by team:</p>
+    <div class="row">
+        <div class="column" style="background-color:#aaaaaada;">
+            <p>CCHA:</p>
+            <input type="checkbox" id="BemidjiState" class="CCHA">
+            <label for="BemidjiState">Bemidji State</label><br>
+            <input type="checkbox" id="BowlingGreen" class="CCHA">
+            <label for="BowlingGreen">Bowling Green</label><br>
+            <input type="checkbox" id="MinnesotaState" class="CCHA">
+            <label for="MinnesotaState">Minnesota State (Mankato)</label><br>
+            <input type="checkbox" id="StThomas" class="CCHA">
+            <label for="StThomas">St. Thomas</label><br>
+            <input type="checkbox" id="MichiganTech" class="CCHA">
+            <label for="MichiganTech">Michigan Tech</label><br>
+            <input type="checkbox" id="LakeSuperiorState" class="CCHA">
+            <label for="LakeSuperiorState">Lake Superior State</label><br>
+            <input type="checkbox" id="NorthernMichigan" class="CCHA">
+            <label for="NorthernMichigan">Northern Michigan</label><br>
+            <input type="checkbox" id="FerrisState" class="CCHA">
+            <label for="FerrisState">Ferris State</label><br>
+        </div>
+        <div class="column" style="background-color:#bbbbbb8e;">
+            <p>Big Ten:</p>
+            <input type="checkbox" id="Michigan" class="BigTen">
+            <label for="Michigan">Michigan</label><br>
+            <input type="checkbox" id="OhioState" class="BigTen">
+            <label for="OhioState">Ohio State</label><br>
+            <input type="checkbox" id="Minnesota" class="BigTen">
+            <label for="Minnesota">Minnesota</label><br>
+            <input type="checkbox" id="Wisconsin" class="BigTen">
+            <label for="Wisconsin">Wisconsin</label><br>
+            <input type="checkbox" id="NotreDame" class="BigTen">
+            <label for="NotreDame">Notre Dame</label><br>
+            <input type="checkbox" id="MichiganState" class="BigTen">
+            <label for="MichiganState">Michigan State</label><br>
+            <input type="checkbox" id="PennState" class="BigTen">
+            <label for="PennState">Penn State</label><br>
+        </div>
+        <div class="column" style="background-color:#aaaaaada;">
+            <p>NCHC:</p>
+            <input type="checkbox" id="MinnesotaDuluth" class="NCHC">
+            <label for="MinnesotaDuluth">Minnesota Duluth</label><br>
+            <input type="checkbox" id="StCloud" class="NCHC">
+            <label for="StCloud">St. Cloud</label><br>
+            <input type="checkbox" id="WesternMichigan" class="NCHC">
+            <label for="WesternMichigan">Western Michigan</label><br>
+            <input type="checkbox" id="ColoradoCollege" class="NCHC">
+            <label for="ColoradoCollege">Colorado College</label><br>
+            <input type="checkbox" id="Denver" class="NCHC">
+            <label for="Denver">Denver</label><br>
+            <input type="checkbox" id="Miami" class="NCHC">
+            <label for="Miami">Miami</label><br>
+            <input type="checkbox" id="Omaha" class="NCHC">
+            <label for="Omaha">Omaha</label><br>
+            <input type="checkbox" id="NorthDakota" class="NCHC">
+            <label for="NorthDakota">North Dakota</label><br>
+        </div>
+        <div class="column" style="background-color:#bbbbbb8e;">
+            <p>ECAC:</p>
+            <input type="checkbox" id="Quinnipiac" class="ECAC">
+            <label for="Quinnipiac">Quinnipiac</label><br>
+            <input type="checkbox" id="Cornell" class="ECAC">
+            <label for="Cornell">Cornell</label><br>
+            <input type="checkbox" id="Colgate" class="ECAC">
+            <label for="Colgate">Colgate</label><br>
+            <input type="checkbox" id="Clarkson" class="ECAC">
+            <label for="Clarkson">Clarkson</label><br>
+            <input type="checkbox" id="Union" class="ECAC">
+            <label for="Union">Union</label><br>
+            <input type="checkbox" id="Dartmouth" class="ECAC">
+            <label for="Dartmouth">Dartmouth</label><br>
+            <input type="checkbox" id="StLawrence" class="ECAC">
+            <label for="StLawrence">St. Lawrence</label><br>
+            <input type="checkbox" id="Yale" class="ECAC">
+            <label for="Yale">Yale</label><br>
+            <input type="checkbox" id="Harvard" class="ECAC">
+            <label for="Harvard">Harvard</label><br>
+            <input type="checkbox" id="Brown" class="ECAC">
+            <label for="Brown">Brown</label><br>
+            <input type="checkbox" id="Princeton" class="ECAC">
+            <label for="Princeton">Princeton</label><br>
+            <input type="checkbox" id="Rensselaer" class="ECAC">
+            <label for="Rensselaer">Rensselaer (RPI)</label><br>
+        </div>
+        <div class="column" style="background-color:#aaaaaada;">
+            <p>Hockey East:</p>
+            <input type="checkbox" id="BostonCollege" class="HockeyEast">
+            <label for="BostonCollege">Boston College</label><br>
+            <input type="checkbox" id="BostonUniversity" class="HockeyEast">
+            <label for="BostonUniversity">Boston University</label><br>
+            <input type="checkbox" id="Maine" class="HockeyEast">
+            <label for="Maine">Maine</label><br>
+            <input type="checkbox" id="Providence" class="HockeyEast">
+            <label for="Providence">Providence</label><br>
+            <input type="checkbox" id="Massachusetts" class="HockeyEast">
+            <label for="Massachusetts">Massachusetts</label><br>
+            <input type="checkbox" id="NewHampshire" class="HockeyEast">
+            <label for="NewHampshire">New Hampshire</label><br>
+            <input type="checkbox" id="Northeastern" class="HockeyEast">
+            <label for="Northeastern">Northeastern</label><br>
+            <input type="checkbox" id="Connecticut" class="HockeyEast">
+            <label for="Connecticut">Connecticut</label><br>
+            <input type="checkbox" id="Vermont" class="HockeyEast">
+            <label for="Vermont">Vermont</label><br>
+            <input type="checkbox" id="Merrimack" class="HockeyEast">
+            <label for="Merrimack">Merrimack</label><br>
+            <input type="checkbox" id="UMassLowell" class="HockeyEast">
+            <label for="UMassLowell">UMass Lowell</label><br>
+        </div>
+        <div class="column" style="background-color:#bbbbbb8e;">
+            <p>Atlantic Hockey:</p>
+            <input type="checkbox" id="RIT" class="AtlanticHockey">
+            <label for="RIT">Rochester Institute of Technology (RIT)</label><br>
+            <input type="checkbox" id="HolyCross" class="AtlanticHockey">
+            <label for="HolyCross">Holy Cross</label><br>
+            <input type="checkbox" id="SacredHeart" class="AtlanticHockey">
+            <label for="SacredHeart">Sacred Heart</label><br>
+            <input type="checkbox" id="AirForce" class="AtlanticHockey">
+            <label for="AirForce">Air Force</label><br>
+            <input type="checkbox" id="AmericanInternational" class="AtlanticHockey">
+            <label for="AmericanInternational">American International</label><br>
+            <input type="checkbox" id="Bentley" class="AtlanticHockey">
+            <label for="Bentley">Bentley</label><br>
+            <input type="checkbox" id="Niagara" class="AtlanticHockey">
+            <label for="Niagara">Niagara</label><br>
+            <input type="checkbox" id="Canisius" class="AtlanticHockey">
+            <label for="Canisius">Canisius</label><br>
+            <input type="checkbox" id="Mercyhurst" class="AtlanticHockey">
+            <label for="Mercyhurst">Mercyhurst</label><br>
+            <input type="checkbox" id="Army" class="AtlanticHockey">
+            <label for="Army">Army</label><br>
+            <input type="checkbox" id="RobertMorris" class="AtlanticHockey">
+            <label for="RobertMorris">Robert Morris</label><br>
+        </div>
+        <div class="column" style="background-color:#aaaaaada;">
+            <p>Independents:</p>
+            <input type="checkbox" id="AlaskaFairbanks" class="Independents">
+            <label for="AlaskaFairbanks">Alaska-Fairbanks</label><br>
+            <input type="checkbox" id="AlaskaAnchorage" class="Independents">
+            <label for="AlaskaAnchorage">Alaska-Anchorage</label><br>
+            <input type="checkbox" id="ArizonaState" class="Independents">
+            <label for="ArizonaState">Arizona State</label><br>
+            <input type="checkbox" id="Lindenwood" class="Independents">
+            <label for="Lindenwood">Lindenwood</label><br>
+            <input type="checkbox" id="LongIsland" class="Independents">
+            <label for="LongIsland">Long Island</label><br>
+            <input type="checkbox" id="Stonehill" class="Independents">
+            <label for="Stonehill">Stonehill</label><br>
+            <input type="checkbox" id="Augustana" class="Independents">
+            <label for="Augustana">Augustana</label><br>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    // Handle the event of the user selecting one of the "Sign up for an entire conference" check boxes.
+    function clickConference(conference) {
+        let select = false;
+        if (document.getElementById(conference).checked == true) {
+            // If the box became checked, indicate we want to check all teams' boxes in that conference.
+            select = true;
+        }
+
+        // Gather all teams' individual check boxes that belong to the conference in question.
+        teams = document.getElementsByClassName(conference);
+
+        // Check all individual team boxes associated with the conference in question.
+        for (let i = 0; i < teams.length; i++)
+        {
+            teams[i].checked = select;
+        }
+    }
+</script>
+<style>
+.column {
+    float: left;
+    padding-right: 25px;
+}
+@media screen and (max-width: 600px) {
+  .column {
+    width: 100%;
+  }
+}
+</style>
