@@ -6,206 +6,239 @@
     <title>CollegeHockeyTransfers</title>
 </head>
 <body>
-    <h1>Welcome to CollegeHockeyTransfers!</h1>
-    <p> Have you found yourself picking up your phone multiple times per day to check social media, news sites like CHN, USCHO, etc., your favorite team's homepage, and more? Do you wish you could get notified as soon as a player associated with your favorite team(s) commits, transfers, or goes pro? If yes, then you're in luck! CollegeHockeyTransfers is a free service that will automatically send you an email each time a player transfers to or from a team you've signed up for updates from.</p>
+    
+    <div class="intro">
+        <h1>Welcome to CollegeHockeyTransfers!</h1>
+        <div class="FAQ" style="text-align: left;padding-left: 5px;font-size: 18px;">
+            <p>
+                Have you found yourself picking up your phone multiple times per day to check social media, news sites like CHN, USCHO, etc., your favorite team's homepage, and more? Do you wish you could get notified as soon as a player associated with your favorite team(s) commits, transfers, or goes pro? If yes, then you're in luck! CollegeHockeyTransfers is a free service that will automatically send you an email each time a player transfers to or from a team you've signed up for updates from. Please look below and select the team(s) you'd like to be notified about, enter your email, and then click "Submit".
+            </p>
+            <p>
+                <b><u>How do I sign up?</u></b><br>
+                To sign up, scroll down and click on the button(s) belonging to the team(s) whose transfers you'd like to be notified about. If you'd like to be notified about any transfer corresponding to a team in a certain conference, you can click the conference's button in the "Sign up by conference" section instead of havint to click on each team's individual box. To de-select a conference or team, simply click the button again. Once you've selected the conference(s) or team(s), scroll to the bottom of the page and enter your the email address that you'd like the email notifications to be sent to. Finally, click "Submit".
+            </p>
+            <p>
+                <b><u>How does this service work?</u></b><br>
+                At a regular interval, several times per day, a Python script will execute that checks the EliteProspects.com transfer feed for transfers corresponding with NCAA D1 hockey teams. If it sees any, it will send out an automated email to those who have requested to hear about transfers involving that particular team.
+            </p>
+            <p>
+                <b><u>What kinds of transactions will trigger an email to be sent?</u></b><br>
+                For example, let's say you've signed up to get notified about Michigan Tech. You will receive an automated email to the address you entered in the following scenarios: A player commits to playing at Michigan Tech in a future season, a player transfers to Michigan Tech from a different college team, or when a current Michigan Tech player transfers to a different team (either college or pro).
+            </p>
+            <p>
+                <b><u>What will the automated email look like?</u></b><br>
+                For example, if the team is Michigan Tech, the email's subject line will be: <b style="font-family: monospace;">[CollegeHockeyTransfers] Michigan Tech Transfer Alert</b><br><br>
+                The email's contents will look something like this:<br>
+                <b style="font-family: monospace;">John Doe (F) from Michigan Tech to Detroit Red Wings<br>
+                   Status: Confirmed Transaction<br>
+                   Date: 01/01/2024<br>
+                   Information: 3 years<br>
+                </b><br>
+                The email will also include a link to the player's EliteProspects profile page as well as a picture of the player, if their profile page contains one. The "Information" line will only appear if the transaction report on EliteProspects included those additional details. The "Date" indicates the date on which the transaction will take place, so it's possible it will be in the future. Furthermore, the "Status" can be a rumor as well.
+            </p>
+            <p>
+                <b><u>How do I unsubscribe or change the team(s) whose transfers I want to receive emails about?</u></b><br>
+                To make a change to the team(s) you previously submitted, please send an email to <b style="font-family: monospace;">william@collicott.com</b> from the email address you previously registered/submitted and explain what change's you'd like to make, or if you'd like to unsubscribe from <b>ALL</b> emails.
+            </p>     
+        </div>
+    </div>
 
-    <p>Sign up for an entire conference:</p>
-    <input type="checkbox" id="CCHA" onclick="clickConference('CCHA')">
-    <label for="CCHA">CCHA</label><br>
-    <input type="checkbox" id="BigTen" onclick="clickConference('BigTen')">
-    <label for="BigTen">Big Ten</label><br>
-    <input type="checkbox" id="NCHC" onclick="clickConference('NCHC')">
-    <label for="NCHC">NCHC</label><br>
-    <input type="checkbox" id="ECAC" onclick="clickConference('ECAC')">
-    <label for="ECAC">ECAC</label><br>
-    <input type="checkbox" id="HockeyEast" onclick="clickConference('HockeyEast')">
-    <label for="HockeyEast">Hockey East</label><br>
-    <input type="checkbox" id="AtlanticHockey" onclick="clickConference('AtlanticHockey')">
-    <label for="AtlanticHockey">Atlantic Hockey</label><br>
-    <input type="checkbox" id="Independents" onclick="clickConference('Independents')">
-    <label for="Independents">Independents</label><br>
+    <div class="select-conference">
+        <h2><u>Sign up by conference</u></h2>
+        <button class="button" id="AtlanticHockey" onclick="clickConference(this.id)">
+            <img src="AtlanticHockey.png"></img>
+        </button>
+        <button class="button" id="BigTen" onclick="clickConference(this.id)">
+            <img src="B1G.png"></img>
+        </button>
+        <button type="image" class="button" id="CCHA" onclick="clickConference(this.id)">
+            <img src="CCHA.png"></img>
+        </button>
+        <button class="button" id="ECAC" onclick="clickConference(this.id)">
+            <img src="ECAC.png"></img>
+        </button>
+        <button class="button" id="HockeyEast" onclick="clickConference(this.id)">
+            <img src="HockeyEast.png"></img>
+        </button>
+        <button class="button" id="NCHC" onclick="clickConference(this.id)">
+            <img src="NCHC.png"></img>
+        </button>
+        <button class="button" id="Independents" onclick="clickConference(this.id)"><b>INDEPENDENTS</b></button>
+    </div>
 
-    <p>Sign up by team:</p>
-    <div class="row">
-        <div class="column" style="background-color:#aaaaaada;">
-            <p>CCHA:</p>
-            <input type="checkbox" id="BemidjiState" class="CCHA">
-            <label for="BemidjiState">Bemidji State</label><br>
-            <input type="checkbox" id="BowlingGreen" class="CCHA">
-            <label for="BowlingGreen">Bowling Green</label><br>
-            <input type="checkbox" id="MinnesotaState" class="CCHA">
-            <label for="MinnesotaState">Minnesota State (Mankato)</label><br>
-            <input type="checkbox" id="StThomas" class="CCHA">
-            <label for="StThomas">St. Thomas</label><br>
-            <input type="checkbox" id="MichiganTech" class="CCHA">
-            <label for="MichiganTech">Michigan Tech</label><br>
-            <input type="checkbox" id="LakeSuperiorState" class="CCHA">
-            <label for="LakeSuperiorState">Lake Superior State</label><br>
-            <input type="checkbox" id="NorthernMichigan" class="CCHA">
-            <label for="NorthernMichigan">Northern Michigan</label><br>
-            <input type="checkbox" id="FerrisState" class="CCHA">
-            <label for="FerrisState">Ferris State</label><br>
-        </div>
-        <div class="column" style="background-color:#bbbbbb8e;">
-            <p>Big Ten:</p>
-            <input type="checkbox" id="Michigan" class="BigTen">
-            <label for="Michigan">Michigan</label><br>
-            <input type="checkbox" id="OhioState" class="BigTen">
-            <label for="OhioState">Ohio State</label><br>
-            <input type="checkbox" id="Minnesota" class="BigTen">
-            <label for="Minnesota">Minnesota</label><br>
-            <input type="checkbox" id="Wisconsin" class="BigTen">
-            <label for="Wisconsin">Wisconsin</label><br>
-            <input type="checkbox" id="NotreDame" class="BigTen">
-            <label for="NotreDame">Notre Dame</label><br>
-            <input type="checkbox" id="MichiganState" class="BigTen">
-            <label for="MichiganState">Michigan State</label><br>
-            <input type="checkbox" id="PennState" class="BigTen">
-            <label for="PennState">Penn State</label><br>
-        </div>
-        <div class="column" style="background-color:#aaaaaada;">
-            <p>NCHC:</p>
-            <input type="checkbox" id="MinnesotaDuluth" class="NCHC">
-            <label for="MinnesotaDuluth">Minnesota Duluth</label><br>
-            <input type="checkbox" id="StCloud" class="NCHC">
-            <label for="StCloud">St. Cloud</label><br>
-            <input type="checkbox" id="WesternMichigan" class="NCHC">
-            <label for="WesternMichigan">Western Michigan</label><br>
-            <input type="checkbox" id="ColoradoCollege" class="NCHC">
-            <label for="ColoradoCollege">Colorado College</label><br>
-            <input type="checkbox" id="Denver" class="NCHC">
-            <label for="Denver">Denver</label><br>
-            <input type="checkbox" id="Miami" class="NCHC">
-            <label for="Miami">Miami</label><br>
-            <input type="checkbox" id="Omaha" class="NCHC">
-            <label for="Omaha">Omaha</label><br>
-            <input type="checkbox" id="NorthDakota" class="NCHC">
-            <label for="NorthDakota">North Dakota</label><br>
-        </div>
-        <div class="column" style="background-color:#bbbbbb8e;">
-            <p>ECAC:</p>
-            <input type="checkbox" id="Quinnipiac" class="ECAC">
-            <label for="Quinnipiac">Quinnipiac</label><br>
-            <input type="checkbox" id="Cornell" class="ECAC">
-            <label for="Cornell">Cornell</label><br>
-            <input type="checkbox" id="Colgate" class="ECAC">
-            <label for="Colgate">Colgate</label><br>
-            <input type="checkbox" id="Clarkson" class="ECAC">
-            <label for="Clarkson">Clarkson</label><br>
-            <input type="checkbox" id="Union" class="ECAC">
-            <label for="Union">Union</label><br>
-            <input type="checkbox" id="Dartmouth" class="ECAC">
-            <label for="Dartmouth">Dartmouth</label><br>
-            <input type="checkbox" id="StLawrence" class="ECAC">
-            <label for="StLawrence">St. Lawrence</label><br>
-            <input type="checkbox" id="Yale" class="ECAC">
-            <label for="Yale">Yale</label><br>
-            <input type="checkbox" id="Harvard" class="ECAC">
-            <label for="Harvard">Harvard</label><br>
-            <input type="checkbox" id="Brown" class="ECAC">
-            <label for="Brown">Brown</label><br>
-            <input type="checkbox" id="Princeton" class="ECAC">
-            <label for="Princeton">Princeton</label><br>
-            <input type="checkbox" id="Rensselaer" class="ECAC">
-            <label for="Rensselaer">Rensselaer (RPI)</label><br>
-        </div>
-        <div class="column" style="background-color:#aaaaaada;">
-            <p>Hockey East:</p>
-            <input type="checkbox" id="BostonCollege" class="HockeyEast">
-            <label for="BostonCollege">Boston College</label><br>
-            <input type="checkbox" id="BostonUniversity" class="HockeyEast">
-            <label for="BostonUniversity">Boston University</label><br>
-            <input type="checkbox" id="Maine" class="HockeyEast">
-            <label for="Maine">Maine</label><br>
-            <input type="checkbox" id="Providence" class="HockeyEast">
-            <label for="Providence">Providence</label><br>
-            <input type="checkbox" id="Massachusetts" class="HockeyEast">
-            <label for="Massachusetts">Massachusetts</label><br>
-            <input type="checkbox" id="NewHampshire" class="HockeyEast">
-            <label for="NewHampshire">New Hampshire</label><br>
-            <input type="checkbox" id="Northeastern" class="HockeyEast">
-            <label for="Northeastern">Northeastern</label><br>
-            <input type="checkbox" id="Connecticut" class="HockeyEast">
-            <label for="Connecticut">Connecticut</label><br>
-            <input type="checkbox" id="Vermont" class="HockeyEast">
-            <label for="Vermont">Vermont</label><br>
-            <input type="checkbox" id="Merrimack" class="HockeyEast">
-            <label for="Merrimack">Merrimack</label><br>
-            <input type="checkbox" id="UMassLowell" class="HockeyEast">
-            <label for="UMassLowell">UMass Lowell</label><br>
-        </div>
-        <div class="column" style="background-color:#bbbbbb8e;">
-            <p>Atlantic Hockey:</p>
-            <input type="checkbox" id="RIT" class="AtlanticHockey">
-            <label for="RIT">Rochester Institute of Technology (RIT)</label><br>
-            <input type="checkbox" id="HolyCross" class="AtlanticHockey">
-            <label for="HolyCross">Holy Cross</label><br>
-            <input type="checkbox" id="SacredHeart" class="AtlanticHockey">
-            <label for="SacredHeart">Sacred Heart</label><br>
-            <input type="checkbox" id="AirForce" class="AtlanticHockey">
-            <label for="AirForce">Air Force</label><br>
-            <input type="checkbox" id="AmericanInternational" class="AtlanticHockey">
-            <label for="AmericanInternational">American International</label><br>
-            <input type="checkbox" id="Bentley" class="AtlanticHockey">
-            <label for="Bentley">Bentley</label><br>
-            <input type="checkbox" id="Niagara" class="AtlanticHockey">
-            <label for="Niagara">Niagara</label><br>
-            <input type="checkbox" id="Canisius" class="AtlanticHockey">
-            <label for="Canisius">Canisius</label><br>
-            <input type="checkbox" id="Mercyhurst" class="AtlanticHockey">
-            <label for="Mercyhurst">Mercyhurst</label><br>
-            <input type="checkbox" id="Army" class="AtlanticHockey">
-            <label for="Army">Army</label><br>
-            <input type="checkbox" id="RobertMorris" class="AtlanticHockey">
-            <label for="RobertMorris">Robert Morris</label><br>
-        </div>
-        <div class="column" style="background-color:#aaaaaada;">
-            <p>Independents:</p>
-            <input type="checkbox" id="AlaskaFairbanks" class="Independents">
-            <label for="AlaskaFairbanks">Alaska-Fairbanks</label><br>
-            <input type="checkbox" id="AlaskaAnchorage" class="Independents">
-            <label for="AlaskaAnchorage">Alaska-Anchorage</label><br>
-            <input type="checkbox" id="ArizonaState" class="Independents">
-            <label for="ArizonaState">Arizona State</label><br>
-            <input type="checkbox" id="Lindenwood" class="Independents">
-            <label for="Lindenwood">Lindenwood</label><br>
-            <input type="checkbox" id="LongIsland" class="Independents">
-            <label for="LongIsland">Long Island</label><br>
-            <input type="checkbox" id="Stonehill" class="Independents">
-            <label for="Stonehill">Stonehill</label><br>
-            <input type="checkbox" id="Augustana" class="Independents">
-            <label for="Augustana">Augustana</label><br>
+    <div class="select-team">
+        <h2><u>Sign up by team</u></h2>
+        <div>
+            <div id="conference" style="background-color:#bbbbbb8e;">
+                <img src="AtlanticHockey.png"></img><br>
+                <button class="button" id="RIT" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Rochester (RIT)</button>
+                <button class="button" id="HolyCross" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Holy Cross</button>
+                <button class="button" id="SacredHeart" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Sacred Heart</button>
+                <button class="button" id="AirForce" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Air Force</button>
+                <button class="button" id="AmericanInternational" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">American International</button>
+                <button class="button" id="Bentley" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Bentley</button>
+                <button class="button" id="Niagara" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Niagara</button>
+                <button class="button" id="Canisius" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Canisius</button>
+                <button class="button" id="Mercyhurst" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Mercyhurst</button>
+                <button class="button" id="Army" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Army</button>
+                <button class="button" id="RobertMorris" data-conference="AtlanticHockey" onclick="clickTeam(this.id)">Robert Morris</button>
+            </div>
+            <div id="conference" style="background-color:#aaaaaada;">
+                <img src="B1G.png"></img><br>
+                <button class="button" id="Michigan" data-conference="BigTen" onclick="clickTeam(this.id)">Michigan</button>
+                <button class="button" id="OhioState" data-conference="BigTen" onclick="clickTeam(this.id)">Ohio State</button>
+                <button class="button" id="Minnesota" data-conference="BigTen" onclick="clickTeam(this.id)">Minnesota</button>
+                <button class="button" id="Wisconsin" data-conference="BigTen" onclick="clickTeam(this.id)">Wisconsin</button>
+                <button class="button" id="NotreDame" data-conference="BigTen" onclick="clickTeam(this.id)">Notre Dame</button>
+                <button class="button" id="MichiganState" data-conference="BigTen" onclick="clickTeam(this.id)">Michigan State</button>
+                <button class="button" id="PennState" data-conference="BigTen" onclick="clickTeam(this.id)">Penn State</button>
+            </div>
+            <div id="conference" style="background-color:#bbbbbb8e;">
+                <img src="CCHA.png"></img><br>
+                <button class="button" id="BemidjiState" data-conference="CCHA" onclick="clickTeam(this.id)">Bemidji State</button>
+                <button class="button" id="BowlingGreen" data-conference="CCHA" onclick="clickTeam(this.id)"> Bowling Green</button>
+                <button class="button" id="MinnesotaState" data-conference="CCHA" onclick="clickTeam(this.id)"> Minnesota State (Mankato)</button>
+                <button class="button" id="StThomas" data-conference="CCHA" onclick="clickTeam(this.id)">St. Thomas</button>
+                <button class="button" id="MichiganTech" data-conference="CCHA" onclick="clickTeam(this.id)">Michigan Tech</button>
+                <button class="button" id="LakeSuperiorState" data-conference="CCHA" onclick="clickTeam(this.id)">Lake Superior State</button>
+                <button class="button" id="NorthernMichigan" data-conference="CCHA" onclick="clickTeam(this.id)">Northern Michigan</button>
+                <button class="button" id="FerrisState" data-conference="CCHA" onclick="clickTeam(this.id)">Ferris State</button>
+            </div>
+            <div id="conference" style="background-color:#aaaaaada;">
+                <img src="ECAC.png"></img><br>
+                <button class="button" id="Quinnipiac" data-conference="ECAC" onclick="clickTeam(this.id)">Quinnipiac</button>
+                <button class="button" id="Cornell" data-conference="ECAC" onclick="clickTeam(this.id)">Cornell</button>
+                <button class="button" id="Colgate" data-conference="ECAC" onclick="clickTeam(this.id)">Colgate</button>
+                <button class="button" id="Clarkson" data-conference="ECAC" onclick="clickTeam(this.id)">Clarkson</button>
+                <button class="button" id="Union" data-conference="ECAC" onclick="clickTeam(this.id)">Union</button>
+                <button class="button" id="Dartmouth" data-conference="ECAC" onclick="clickTeam(this.id)">Dartmouth</button>
+                <button class="button" id="StLawrence" data-conference="ECAC" onclick="clickTeam(this.id)">St. Lawrence</button>
+                <button class="button" id="Yale" data-conference="ECAC" onclick="clickTeam(this.id)">Yale</button>
+                <button class="button" id="Harvard" data-conference="ECAC" onclick="clickTeam(this.id)">Harvard</button>
+                <button class="button" id="Brown" data-conference="ECAC" onclick="clickTeam(this.id)">Brown</button>
+                <button class="button" id="Princeton" data-conference="ECAC" onclick="clickTeam(this.id)">Princeton</button>
+                <button class="button" id="Rensselaer" data-conference="ECAC" onclick="clickTeam(this.id)">Rensselaer (RPI)</button>
+            </div>
+            <div id="conference" style="background-color:#bbbbbb8e;">
+                <img src="HockeyEast.png"></img><br>
+                <button class="button" id="BostonCollege" data-conference="HockeyEast" onclick="clickTeam(this.id)">Boston College</button>
+                <button class="button" id="BostonUniversity" data-conference="HockeyEast" onclick="clickTeam(this.id)">Boston University</button>
+                <button class="button" id="Maine" data-conference="HockeyEast" onclick="clickTeam(this.id)">Maine</button>
+                <button class="button" id="Providence" data-conference="HockeyEast" onclick="clickTeam(this.id)">Providence</button>
+                <button class="button" id="Massachusetts" data-conference="HockeyEast" onclick="clickTeam(this.id)">Massachusetts</button>
+                <button class="button" id="NewHampshire" data-conference="HockeyEast" onclick="clickTeam(this.id)">New Hampshire</button>
+                <button class="button" id="Northeastern" data-conference="HockeyEast" onclick="clickTeam(this.id)">Northeastern</button>
+                <button class="button" id="Connecticut" data-conference="HockeyEast" onclick="clickTeam(this.id)">Connecticut</button>
+                <button class="button" id="Vermont" data-conference="HockeyEast" onclick="clickTeam(this.id)">Vermont</button>
+                <button class="button" id="Merrimack" data-conference="HockeyEast" onclick="clickTeam(this.id)">Merrimack</button>
+                <button class="button" id="UMassLowell" data-conference="HockeyEast" onclick="clickTeam(this.id)">UMass-Lowell</button>
+            </div>
+            <div id="conference" style="background-color:#aaaaaada;">
+                <img src="NCHC.png"></img><br>
+                <button class="button" id="MinnesotaDuluth" data-conference="NCHC" onclick="clickTeam(this.id)">Minnesota-Duluth</button>
+                <button class="button" id="StCloud" data-conference="NCHC" onclick="clickTeam(this.id)">St. Cloud</button>
+                <button class="button" id="WesternMichigan" data-conference="NCHC" onclick="clickTeam(this.id)">Western Michigan</button>
+                <button class="button" id="ColoradoCollege" data-conference="NCHC" onclick="clickTeam(this.id)">Colorado College</button>
+                <button class="button" id="Denver" data-conference="NCHC" onclick="clickTeam(this.id)">Denver</button>
+                <button class="button" id="Miami" data-conference="NCHC" onclick="clickTeam(this.id)">Miami</button>
+                <button class="button" id="Omaha" data-conference="NCHC" onclick="clickTeam(this.id)">Omaha</button>
+                <button class="button" id="NorthDakota" data-conference="NCHC" onclick="clickTeam(this.id)">North Dakota</button>
+            </div>
+            <div id="conference" style="background-color:#bbbbbb8e;">
+                <p><b>INDEPENDENTS</b></p>
+                <button class="button" id="AlaskaFairbanks" data-conference="Independents" onclick="clickTeam(this.id)">Alaska-Fairbanks</button>
+                <button class="button" id="AlaskaAnchorage" data-conference="Independents" onclick="clickTeam(this.id)">Alaska-Anchorage</button>
+                <button class="button" id="ArizonaState" data-conference="Independents" onclick="clickTeam(this.id)">Arizona State</button>
+                <button class="button" id="Lindenwood" data-conference="Independents" onclick="clickTeam(this.id)">Lindenwood</button>
+                <button class="button" id="LongIsland" data-conference="Independents" onclick="clickTeam(this.id)">Long Island</button>
+                <button class="button" id="Stonehill" data-conference="Independents" onclick="clickTeam(this.id)">Stonehill</button>
+                <button class="button" id="Augustana" data-conference="Independents" onclick="clickTeam(this.id)">Augustana</button>
+            </div>
         </div>
     </div>
 </body>
 </html>
 <script>
-    // Handle the event of the user selecting one of the "Sign up for an entire conference" check boxes.
+    // Handle the event of the user clicking one of the "Sign up for an entire conference" buttons.
     function clickConference(conference) {
-        let select = false;
-        if (document.getElementById(conference).checked == true) {
-            // If the box became checked, indicate we want to check all teams' boxes in that conference.
-            select = true;
+        // Gather all teams' individual buttons that belong to the conference in question.
+        let teams = document.querySelectorAll(`button[data-conference=${conference}]`);
+        
+        buttonClicked = document.getElementById(conference);
+
+        if (buttonClicked.style.backgroundColor != "lightgreen") {
+            // If the button was previously un-selected, turn it's background to green.
+            buttonClicked.style.backgroundColor = "lightgreen";
+            buttonClicked.style.borderColor = 'darkgreen';
+        }
+        else {
+            // If the button was previously selected, turn it's background back to white.
+            buttonClicked.style.backgroundColor = "whitesmoke";
+            buttonClicked.style.borderColor = "whitesmoke";
         }
 
-        // Gather all teams' individual check boxes that belong to the conference in question.
-        teams = document.getElementsByClassName(conference);
-
-        // Check all individual team boxes associated with the conference in question.
+        // Turn each of the conference's teams' buttons green.
         for (let i = 0; i < teams.length; i++)
         {
-            teams[i].checked = select;
+            teams[i].style.backgroundColor = buttonClicked.style.backgroundColor;
+            teams[i].style.borderColor = buttonClicked.style.borderColor;
+        }
+    }
+
+    // Handle the event of the user clicking a teams' button.
+    function clickTeam(team) {
+        buttonClicked = document.getElementById(team);
+
+        if (buttonClicked.style.backgroundColor != "lightgreen") {
+            // If the button was previously un-selected, turn it's background to green.
+            buttonClicked.style.backgroundColor = "lightgreen";
+            buttonClicked.style.borderColor = 'darkgreen';
+        }
+        else {
+            // If the button was previously selected, turn it's background back to white.
+            buttonClicked.style.backgroundColor = "whitesmoke";
+            buttonClicked.style.borderColor = "whitesmoke";
         }
     }
 </script>
 <style>
-.column {
-    float: left;
-    padding-right: 25px;
-}
-@media screen and (max-width: 600px) {
-  .column {
-    width: 100%;
-  }
-}
+    .button {
+        background-color: whitesmoke;
+        border-color: whitesmoke;
+        width: 125px;
+        height: 60px;
+        vertical-align: middle;
+    }
+    img {
+        max-width:100px;
+        max-height:50px;
+        vertical-align: middle;
+    }
+    #conference {
+        .button {
+            width: 125px;
+            height: 40px;
+        }
+        img {
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+        p {
+            padding-top: 5px;
+        }
+        padding-bottom: 10px;
+    }
+    .select-conference, .intro, .select-team {
+        text-align: center;
+        border: 3px solid black;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        vertical-align: middle;
+    }
+    .intro {
+        border-bottom: 0px;
+    }
+    .select-team {
+        border-top: 0px;
+    }
 </style>
