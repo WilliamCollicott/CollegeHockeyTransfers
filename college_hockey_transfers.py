@@ -14,9 +14,11 @@ import feedparser
 import datetime
 import requests
 import smtplib
-from links_and_paths import transaction_ids_path
+from links_and_paths import transaction_ids_path, gmail_app_password
 from bs4 import BeautifulSoup
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
 
 team_ids_to_name = {
     '2453'  : 'Air Force',
@@ -101,45 +103,60 @@ def construct_email(title, decoded_description, team_id):
         information = re.search(r'(Information: .*)<br/>', decoded_description).group(1)
         email_body += ('<br>' + information)
 
-    email_body += '<br><a href="%s">EliteProspects Player Page</a></p>' & (ep_player_page)
+    email_body += '<br><a href="%s">EliteProspects Player Page</a></p>' % (ep_player_page)
+
+    # Assemble email object
+    email = MIMEMultipart()
+    email.attach(MIMEText(email_body, 'html'))
+    email['Subject'] = '[CollegeHockeyTransfers] %s Transfer Alert' % (team_ids_to_name[team_id])
 
     # Load the player's EliteProspects page and search for a profile picture
     ep_player_page_data = requests.get(ep_player_page)
     ep_player_page_html = BeautifulSoup(ep_player_page_data.text, 'html.parser')
     ep_player_page_picture_section = ep_player_page_html.find('div', {'class': 'ep-entity-header__main-image'})
-    ep_player_page_picture_search = re.search(r'url\(\'(.*)\'\);', ep_player_page_picture_section['style'])
+    ep_player_page_picture_search = re.search(r'url\([\"\'](.*)[\"\']\);', ep_player_page_picture_section['style'])
 
     # If it exists, attach the player page's profile photo to the email's body
-    if ep_player_page_picture_search:
-        print(ep_player_page_picture_search.group(1))
-        email_body += '<br><img src="%s"></img>' % (ep_player_page_picture_search.group(1))
+    if ep_player_page_picture_search and (ep_player_page_picture_search.group(1) != 'https://static.eliteprospects.com/images/player-fallback.jpg'):
+        # If the path to their profile picture is missing the https: prefix, add it
+        if "https:" not in ep_player_page_picture_search.group(1):
+            img_data = requests.get('https:' + ep_player_page_picture_search.group(1)).content
+        else:
+            img_data = requests.get(ep_player_page_picture_search.group(1)).content
 
-    # Assemble email object
-    email = MIMEText(email_body, 'html')
-    email['Subject'] = '[CollegeHockeyTransfers] %s Transfer Alert' % (team_ids_to_name[team_id])
-    email['From'] = 'william@collicott.com'
-    email['To'] = '' # TODO: Query the DB table of the team in question to get the recipient list
+        email.attach(MIMEImage(img_data, name='ep_player_picture'))
 
     return email
 
 # For a given transaction, delegate the message construction to construct_message() and publish it
-def process_match(transaction_id, transaction_ids_list, title, decoded_description, team_id):
+def send_email(transaction_id, transaction_ids_list, title, decoded_description, team_id):
     if transaction_id in transaction_ids_list:
         # Don't send out an alert for this transfer if we've already sent it out
         return
+    
+    print('Notify those who subscribed to %s' % (team_ids_to_name[team_id]))
 
     # Assamble the email to be published
     email = construct_email(title, decoded_description, team_id)
+
+    # Send the email
+    server = smtplib.SMTP('smtp.gmail.com', 587) # Use TLS encryption
+    server.set_debuglevel(True)
+    server.connect('smtp.gmail.com', 587)
+    server.starttls()
+    server.login('william@collicott.com', gmail_app_password)
+    try:
+        # TODO: Query database based on team name (use team_id to get table name from dict)
+        server.sendmail('william@collicott.com', ['william@collicott.com'], email.as_string())
+    finally:
+        server.quit()
+    
+    print('Message sent!')
 
     # Record the transaction's ID so we know not to publish it again it we still see it later on
     with open(transaction_ids_path + 'transaction_ids.txt', 'a') as transaction_ids_file:
         date_and_time = datetime.datetime.now()
         transaction_ids_file.write(transaction_id + ',' + str(date_and_time) + '\n')
-
-    # Send the email
-    s = smtplib.SMTP('localhost')
-    s.send_message(email)
-    s.quit()
 
 # Assemble the list of transaction IDs that have already been published
 def setup():
@@ -182,16 +199,15 @@ def process_feed(feed, transaction_ids_list):
         transaction_id = re.search(r'/t/(\d*)', item.guid).group(1)
         decoded_description = str(BeautifulSoup(item.description, features='html.parser'))
 
-        teams_mentioned = re.findall(r'<a href="https:\/\/www\.eliteprospects\.com\/team\/(\d*)\/', decoded_description)
+        teams_ids = re.findall(r'<a href="https:\/\/www\.eliteprospects\.com\/team\/(\d*)\/', decoded_description)
 
-        for match in teams_mentioned:
-            team_id = match.group(1)
+        print(teams_ids)
+
+        for team_id in teams_ids:
             if team_id in team_ids_to_name:
                 # The current transaction involves a NCAA D1 hockey team.
-                # So, gather the email addresses of the team's subscribers and send them all a notification.
-                print('Notify those who subscribed to %s' % (team_ids_to_name[team_id]))
-                process_match(transaction_id, transaction_ids_list, item.title, decoded_description, team_id)
-        
+                send_email(transaction_id, transaction_ids_list, item.title, decoded_description, team_id)
+
 def main():
     transaction_ids_list = setup()
     feed = feedparser.parse('https://www.eliteprospects.com/rss/transfers')
