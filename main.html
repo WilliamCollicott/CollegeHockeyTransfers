@@ -66,7 +66,7 @@
         <button class="button" id="Independents" onclick="clickConference(this.id)"><b>INDEPENDENTS</b></button>
     </div>
 
-    <div class="select-team">
+    <div class="select-team" id="select-team">
         <h2><u>Sign up by team</u></h2>
         <div>
             <div id="conference" style="background-color:#bbbbbb8e;">
@@ -197,8 +197,7 @@
         }
 
         // Turn each of the conference's teams' buttons green.
-        for (let i = 0; i < teams.length; i++)
-        {
+        for (let i = 0; i < teams.length; i++) {
             teams[i].style.backgroundColor = buttonClicked.style.backgroundColor;
             teams[i].style.borderColor = buttonClicked.style.borderColor;
         }
@@ -238,7 +237,25 @@
 
     // Take the email address entered, gather the marked team(s), and update the database.
     function processEmailSubmission(email) {
-        alert(email); // Placeholder, will change later.
+        let selectTeamDiv = document.getElementById("select-team");
+        let team_buttons = selectTeamDiv.getElementsByClassName("button");
+        let team_marked = false;
+
+        for (let i = 0; i < team_buttons.length; i++) {
+            if (team_buttons[i].style.backgroundColor == "lightgreen") {
+                team_marked = true;
+                console.log(team_buttons[i].id);
+            }
+        }
+
+        if (!team_marked) {
+            alert("You did not select any team or teams. Please select at least one team and try again.");
+        }
+        else {
+            alert("Thank you " + email + ", your submission has been recorded.");
+        }
+
+        
     }
 </script>
 <style>
