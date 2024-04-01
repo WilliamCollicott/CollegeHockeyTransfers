@@ -1,14 +1,3 @@
-# CollegeHockeyTransfers collects, organizes, and sends notifications about transfers related to NCAA D1 Men's Hockey
-# People can sign up for automated emails that correspond to the team(s) they signed up for
-#
-# Transfer feeds are monitored for the following situations:
-#   - Rumors, confirmations, etc. of junior hockey player commitments
-#   - Future NCAA D1 players changing the junior team they're playing on
-#   - Current players transfering to another school or going pro
-#
-# Author : William Collicott (MTU BS Computer Science, 2020)
-# Email  : william@collicott.com
-
 import re
 import feedparser
 import datetime
