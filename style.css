@@ -1,0 +1,49 @@
+.button {
+    background-color: whitesmoke;
+    border-color: whitesmoke;
+    width: 125px;
+    height: 60px;
+    vertical-align: middle;
+}
+img {
+    max-width: 100px;
+    max-height: 50px;
+    vertical-align: middle;
+}
+#conference {
+    .button {
+        width: 125px;
+        height: 40px;
+    }
+    img {
+        padding-top: 5px;
+        padding-bottom: 5px;
+    }
+    padding-bottom: 10px;
+    padding-top: 5px;
+}
+.section {
+    text-align: center;
+    border: 3px;
+    border-color: black;
+    border-style: solid;
+    vertical-align: middle;
+}
+#faq {
+    padding-left: 5px;
+    padding-right: 5px;
+
+    div {
+        text-align: left;
+        padding-left: 5px;
+        font-size: 18px;
+    }
+}
+#selectTeam {
+    border-top: 0px;
+    border-bottom: 0px;
+}
+#submission {
+    border-bottom: 0px;
+    padding-bottom: 10px;
+}
