@@ -100,7 +100,7 @@ def construct_email(title, decoded_description, team_id):
     # Assemble email object
     email = MIMEMultipart()
     email.attach(MIMEText(email_body, 'html'))
-    email['Subject'] = '[CollegeHockeyTransfers] %s Transfer Alert' % (team_ids_to_name[team_id])
+    email['Subject'] = '[CollegeHockeyTransfers] %s Transaction Alert' % (team_ids_to_name[team_id])
 
     # Load the player's EliteProspects page and search for a profile picture
     ep_player_page_data = requests.get(ep_player_page)
