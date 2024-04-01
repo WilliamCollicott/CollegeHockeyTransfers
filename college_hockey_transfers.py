@@ -12,7 +12,8 @@ from email.mime.multipart import MIMEMultipart
 
 from python_db_credentials import transaction_ids_path, gmail_app_password, db_username, db_password, db_ip, database_name, smtp_username, sender_email
 
-team_ids_to_name = {
+# Mapping of team ID numbers to their corresponding team name using the EliteProspects team ID. Note these are different to those in the Team table in the database.
+ep_team_ids_to_name = {
     '2453'  : 'Air Force',
     '1252'  : 'American International',
     '18066' : 'Arizona State',
@@ -100,7 +101,7 @@ def construct_email(title, decoded_description, team_id):
     # Assemble email object
     email = MIMEMultipart()
     email.attach(MIMEText(email_body, 'html'))
-    email['Subject'] = '[CollegeHockeyTransfers] %s Transaction Alert' % (team_ids_to_name[team_id])
+    email['Subject'] = '[CollegeHockeyTransfers] %s Transaction Alert' % (ep_team_ids_to_name[team_id])
 
     # Load the player's EliteProspects page and search for a profile picture
     ep_player_page_data = requests.get(ep_player_page)
@@ -144,7 +145,7 @@ def send_email(transaction_id, title, decoded_description, ncaa_d1_team_ids):
         email_object = construct_email(title, decoded_description, team_id)
 
         # Query the emails of individuals who have subscribed to the team in question
-        query = ("SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (team_ids_to_name[team_id]))
+        query = ("SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
         cursor.execute(query)
         recipient_list = list(cursor.fetchall())
 
@@ -221,7 +222,7 @@ def process_feed(feed, transaction_ids_list):
         # Only pass send_email() the team IDs which correspond to an NCAA D1 team.
         ncaa_d1_team_ids = []
         for team_id in teams_ids:
-            if team_id in team_ids_to_name:
+            if team_id in ep_team_ids_to_name:
                 # The current team_id corresponds to an NCAA D1 team.
                 ncaa_d1_team_ids.append(team_id)
         
