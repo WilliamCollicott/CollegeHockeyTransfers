@@ -121,45 +121,54 @@ def construct_email(title, decoded_description, team_id):
     return email
 
 # For a given transaction, delegate the message construction to construct_message() and publish it
-def send_email(transaction_id, transaction_ids_list, title, decoded_description, team_id):
-    if transaction_id in transaction_ids_list:
-        # Don't send out an alert for this transfer if we've already sent it out
-        return
-    
-    print('Notify those who subscribed to %s' % (team_ids_to_name[team_id]))
-
-    # Assamble the email to be published
-    email_object = construct_email(title, decoded_description, team_id)
-
-    # Send the email
+def send_email(transaction_id, title, decoded_description, ncaa_d1_team_ids):
+    # Connect to the Gmail server.
     server = smtplib.SMTP('smtp.gmail.com', 587) # Use TLS encryption
     server.set_debuglevel(True)
     server.connect('smtp.gmail.com', 587)
     server.starttls()
     server.login(smtp_username, gmail_app_password)
-    try:
+
+    # Set up database connection
+    connection = mysql.connector.connect(user=db_username, password=db_password, host=db_ip, database=database_name)
+    cursor = connection.cursor()
+
+    # For transfers involving two NCAA D1 teams, keep track of which accounts we've already notified so we don't double send an email for someone subscribed to both teams.
+    # For example, if there's a transfer involving Harvard and Yale, we only want to send one email to someone subscribed to both.
+    recipients_already_notified = []
+
+    transaction_id_already_recorded = False # This boolean makes sure we don't record the same transaction ID in transaction_ids.txt twice.
+
+    for team_id in ncaa_d1_team_ids:
+        # Assemble the email to be published
+        email_object = construct_email(title, decoded_description, team_id)
+
         # Query the emails of individuals who have subscribed to the team in question
-        connection = mysql.connector.connect(user=db_username, password=db_password, host=db_ip, database=database_name)
-        cursor = connection.cursor()
         query = ("SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (team_ids_to_name[team_id]))
-        print(query)
         cursor.execute(query)
-        
-        # Send the email(s)
-        for (email) in cursor:
-            server.sendmail(sender_email, [email], email_object.as_string())
+        recipient_list = list(cursor.fetchall())
 
-        print('Message sent!')
+        # If there are no subscribers to the current team, don't bother proceeding to send an email to nobody. 
+        if len(recipient_list) == 0:
+            continue
 
-        # Record the transaction's ID so we know not to publish it again it we still see it later on
-        with open(transaction_ids_path + 'transaction_ids.txt', 'a') as transaction_ids_file:
-            date_and_time = datetime.datetime.now()
-            transaction_ids_file.write(transaction_id + ',' + str(date_and_time) + '\n')
+        # Send an email to each subscriber for the current team as long as we haven't sent them an email about this transfer already.
+        for recipient in recipient_list:
+            if recipient not in recipients_already_notified:
+                server.sendmail(sender_email, [recipient], email_object.as_string())
+                recipients_already_notified.append(recipient)
 
-    finally:
-        server.quit()
-        cursor.close()
-        connection.close()
+        # Record the transaction ID in transaction_ids.txt as long as it's not already there.
+        # We record it so we know not to send the same notification again in this script's next invocation.
+        if not transaction_id_already_recorded:
+            with open(transaction_ids_path + 'transaction_ids.txt', 'a') as transaction_ids_file:
+                date_and_time = datetime.datetime.now()
+                transaction_ids_file.write(transaction_id + ',' + str(date_and_time) + '\n')
+                transaction_id_already_recorded = True
+
+    cursor.close()
+    connection.close()
+    server.quit()
 
 # Assemble the list of transaction IDs that have already been published
 def setup():
@@ -200,16 +209,25 @@ def process_feed(feed, transaction_ids_list):
     # In each the RSS feed's 50 most recent transfers, look for mentions of Michigan Tech or future or former players
     for item in feed.entries:
         transaction_id = re.search(r'/t/(\d*)', item.guid).group(1)
+
+        if transaction_id in transaction_ids_list:
+            # Don't proceed if we've already send out a notification about this transfer.
+            continue
+
         decoded_description = str(BeautifulSoup(item.description, features='html.parser'))
 
         teams_ids = re.findall(r'<a href="https:\/\/www\.eliteprospects\.com\/team\/(\d*)\/', decoded_description)
 
-        print(teams_ids)
-
+        # Only pass send_email() the team IDs which correspond to an NCAA D1 team.
+        ncaa_d1_team_ids = []
         for team_id in teams_ids:
             if team_id in team_ids_to_name:
-                # The current transaction involves a NCAA D1 hockey team.
-                send_email(transaction_id, transaction_ids_list, item.title, decoded_description, team_id)
+                # The current team_id corresponds to an NCAA D1 team.
+                ncaa_d1_team_ids.append(team_id)
+        
+        # Start the process of sending the email(s) as long as the current transfer involves at least one NCAA D1 team.
+        if len(ncaa_d1_team_ids):
+            send_email(transaction_id, item.title, decoded_description, ncaa_d1_team_ids)
 
 def main():
     transaction_ids_list = setup()

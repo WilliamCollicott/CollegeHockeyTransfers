@@ -1,6 +1,5 @@
 <?php
     include "website_db_credentials.php";
-
     error_reporting(E_ERROR | E_PARSE);
     
     function processSubmission() {
@@ -22,8 +21,7 @@
         $submitButtonValue = $_POST["submit"];
 
         // If no teams were selected, alert the user and return from the function, which will then re-direct back to the homepage.
-        if ($submitButtonValue == '')
-        {
+        if ($submitButtonValue == '') {
             echo "<script type='text/javascript'>alert('You did not select any teams. Please select at least one team before submitting.');</script>";
             $mysqli->close();
             return;
@@ -37,7 +35,6 @@
         
         // If the email address is already in the database, return and do not proceed.
         if ($result->num_rows == 1) {
-            
             echo "<script type='text/javascript'>alert('Your email is already in the database. To change your selections, click the edit link in either the initial confirmation email or any transfer notification emails.');</script>";
             $mysqli -> close();
             return;
@@ -56,8 +53,7 @@
         $teamArray = explode(',', $submitButtonValue);
 
         // For each team selected by the user, retrieve its corresponding team ID from the Team table and insert an (email, team ID) pair into the Subscription table.
-        for ($i = 0; $i < sizeof($teamArray); $i++)
-        {
+        for ($i = 0; $i < sizeof($teamArray); $i++) {
             // Retrieve the team ID.
             $result = $mysqli->query("SELECT Id FROM Team AS T WHERE T.TeamName='$teamArray[$i]'");
             $row = mysqli_fetch_assoc($result);
