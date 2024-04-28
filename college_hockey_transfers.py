@@ -242,7 +242,7 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
         except IndexError:
             # If there's no origin team listed, move on to the next row.
             continue
-        
+
         try:
             spreadsheet_destination_team = '?' if row[destination_team_column] == '' else row[destination_team_column].strip()
         except IndexError:
