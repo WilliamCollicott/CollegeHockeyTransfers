@@ -509,15 +509,16 @@ def main():
     connection = mysql.connector.connect(user=db_username, password=db_password, host=db_ip, database=database_name)
     cursor = connection.cursor()
 
+    # Check EliteProspects for transactions that are NOT between two NCAA D1 teams.
     transaction_ids_list = update_transaction_ids_file()
     process_feed(transaction_ids_list, server, cursor)
 
+    # Monitor online transfer portal spreadsheets for transfers involving two NCAA D1 teams.
     rink_live_portal_data = get_portal_spreadsheet_data(rink_live_spreadsheet_id, rink_live_tab_name)
     gopher_puck_live_portal_data = get_portal_spreadsheet_data(gopher_puck_live_shreadsheet_id, gopher_puck_live_tab_name)
     db_team_names = list(ep_team_ids_to_name.values())
     process_portal_spreadsheet(rink_live_portal_data, db_team_names, 2, 1, 6, 0, 11, 15)
     process_portal_spreadsheet(gopher_puck_live_portal_data, db_team_names, 1, 2, 3, 1, 5, 0)
-
     construct_and_send_transfer_message(server, cursor)
 
     # Close the connection to the database and Gmail server.
