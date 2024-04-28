@@ -233,7 +233,16 @@ def send_transfer_email(text, teams_involved, server, cursor):
 def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_row, origin_team_column, position_column, player_name_column, destination_team_column, date_added_column):
     # Loop through each row in the spreadsheet data.
     for row in portal_spreadsheet_data[starting_row:]:
-        # Handle the situations where sometimes a player's destination team and/or position isn't listed and instead represented as not part of the row.
+        # Handle situations where sometimes a row's columns are empty and represented as not part of the row instead of just an empty string.
+        try:
+            spreadsheet_origin_team = row[origin_team_column].strip()
+
+            if spreadsheet_origin_team == '':
+                raise IndexError('The origin team is not listed!')
+        except IndexError:
+            # If there's no origin team listed, move on to the next row.
+            continue
+        
         try:
             spreadsheet_destination_team = '?' if row[destination_team_column] == '' else row[destination_team_column].strip()
         except IndexError:
@@ -246,7 +255,6 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             position = '?'
 
         # Trim off any leading or trailing white space.
-        spreadsheet_origin_team = row[origin_team_column].strip()
         spreadsheet_player_name = row[player_name_column].strip()
 
         if spreadsheet_origin_team in db_team_names:
