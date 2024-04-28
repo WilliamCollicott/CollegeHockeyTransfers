@@ -256,13 +256,10 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             # If not, check to see if it maps to a team name in the database.
             db_origin_team = spreadsheet_team_name_to_db_name[spreadsheet_origin_team]
         else:
-            # The origin team listed in the spreadsheet could not be matched to one of the team names in the database,
-            # so just so send an email to william@collicott.com indicating the origin team that could not be matched.
-            print('Player name:', spreadsheet_player_name)
-            print('Origin team:', spreadsheet_origin_team)
-            raise Exception('UNABLE TO DETERMINE ORIGIN TEAM!')
+            # The origin team could not be matched, so don't report this transfer.
+            print('Skip reporing %s\'s transfer because the origin team could not be matched: %s' % (spreadsheet_player_name, spreadsheet_origin_team))
+            continue
 
-        db_destination_team = ''
         if '(Withdrew from Portal)' in spreadsheet_destination_team or 'WITHDRAWN' in spreadsheet_destination_team:
             # If a player has withdrawn from the portal, make note of that.
             db_destination_team = db_origin_team
@@ -272,14 +269,10 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
         elif spreadsheet_destination_team in spreadsheet_team_name_to_db_name:
             # Otherwise, we know that the spreadsheet's destination team maps to one in the database.
             db_destination_team = spreadsheet_team_name_to_db_name[spreadsheet_destination_team]
-        elif spreadsheet_destination_team != '?':
-            # The destination team is not a D1 team, so don't report this transfer. For example, the player could be transferring to a D3, club, or junior team.
-            print('Skip reporing %s\'s transfer because the destination team is %s' % (spreadsheet_player_name, spreadsheet_destination_team))
-            continue
         else:
-            print('Player name:', spreadsheet_player_name)
-            print('Destination team:', spreadsheet_destination_team)
-            raise Exception('UNABLE TO DETERMINE DESTINATION TEAM!')
+            # The destination team could not be matched, so don't report this transfer. For example, the player could be transferring to a D3, club, or junior team.
+            print('Skip reporing %s\'s transfer because the destination team could not be matched: %s' % (spreadsheet_player_name, spreadsheet_destination_team))
+            continue
 
         # Parse out and re-assemble the date added in order to account for differences in sheets' format, typos, etc.
         date_parts = re.search(r'(\d+)\/(\d+)\/(\d+)', row[date_added_column].strip())
@@ -370,7 +363,7 @@ def construct_and_send_transfer_message(server, cursor):
                 published_transfers_file.write('%s,%s,%s,%s,%s\n' % (date_added, player_name, player_position, origin_team, destination_team))
 
 # This method parses a transfer's description section and assembles the string representing the message to be published.
-def construct_email(title, decoded_description, team_id):
+def construct_email(title, decoded_description):
     # Parse out the sections of the description we're interested in.
     details = re.search(r'(Status: .*)<br/>\n(Date: .*)<br/>\nPlayer: <a href=\"(.*)\">', decoded_description)
     status = details.group(1)
@@ -419,7 +412,7 @@ def construct_email(title, decoded_description, team_id):
 def send_transaction_email(transaction_id, title, decoded_description, team_id, server, cursor):
     with open(transaction_ids_path + 'transaction_ids.txt', 'a') as transaction_ids_file:
         # Assemble the email to be published.
-        email_object = construct_email(title, decoded_description, team_id)
+        email_object = construct_email(title, decoded_description)
 
         # Query the emails of individuals who have subscribed to the team in question.
         query = ("SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
@@ -486,7 +479,7 @@ def process_feed(transaction_ids_list, server, cursor):
 
         teams_ids = re.findall(r'<a href="https:\/\/www\.eliteprospects\.com\/team\/(\d*)\/', decoded_description)
 
-        # Only pass send_transaction_email() the team IDs which correspond to an NCAA D1 team.
+        # Only pass send_transaction_email() a team ID which correspond to an NCAA D1 team.
         ncaa_d1_team_ids = []
         for team_id in teams_ids:
             if team_id in ep_team_ids_to_name:
