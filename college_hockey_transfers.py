@@ -18,7 +18,7 @@ from googleapiclient.errors import HttpError
 
 inter_university_transfers = []
 
-# Mapping of team ID numbers to their corresponding team name using the EliteProspects team ID. Note these are different to those in the Team table in the database.
+# Mapping of team ID numbers to their corresponding team name using the EliteProspects team ID. These are different to those in the Team table in the database.
 ep_team_ids_to_name = {
     '2453'  : 'Air Force',
     '1252'  : 'American International',
@@ -206,11 +206,12 @@ def get_portal_spreadsheet_data(spreadsheet_id, sheet_name):
 def send_transfer_email(text, teams_involved, server, cursor):
     # Construct the email object.
     email_body = '<p>' + text + '</p>'
-    email_object = MIMEText(email_body, 'html')
+    email_object = MIMEMultipart()
+    email_object.attach(MIMEText(email_body, 'html'))
     email_object['Subject'] = '[CollegeHockeyTransfers] Transfer Alert'
 
     # Query the emails of individuals who have subscribed to the team in question.
-    query = "SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (teams_involved[0])
+    query = "SELECT Email,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (teams_involved[0])
 
     # If a player's transfer lists a destination team, add an OR clause to the query so we get the email addresses both teams' subscribers.
     if len(teams_involved) == 2:
@@ -223,8 +224,12 @@ def send_transfer_email(text, teams_involved, server, cursor):
 
     # Send an email to each recipient.
     for recipient in recipient_list:
+        edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[1])
+        edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
+        email_object.attach(MIMEText(edit_line, 'html'))
+
         try:
-            server.sendmail(sender_email, [recipient], email_object.as_string())
+            server.sendmail(sender_email, [recipient[0]], email_object.as_string())
         except smtplib.SMTPRecipientsRefused:
             # Recipient refused the email, so just move on to the next email address in recipient_list.
             continue
@@ -236,11 +241,12 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
         # Handle situations where sometimes a row's columns are empty and represented as not part of the row instead of just an empty string.
         try:
             spreadsheet_origin_team = row[origin_team_column].strip()
+            date_column_string = row[date_added_column].strip()
 
-            if spreadsheet_origin_team == '':
-                raise IndexError('The origin team is not listed!')
+            if '' in [spreadsheet_origin_team, date_column_string]:
+                raise IndexError()
         except IndexError:
-            # If there's no origin team listed, move on to the next row.
+            # If there's no origin team or date for when the player entered the portal listed, move on to the next row.
             continue
 
         try:
@@ -250,9 +256,9 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
 
         try:
             # A player's position will be represented as either F, D, or G.
-            position = '?' if row[position_column][0].upper() == '' else row[position_column].strip()[0].upper()
+            position = 'player' if row[position_column][0].upper() == '' else row[position_column].strip()[0].upper()
         except IndexError:
-            position = '?'
+            position = 'player'
 
         # Trim off any leading or trailing white space.
         spreadsheet_player_name = row[player_name_column].strip()
@@ -283,7 +289,7 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             continue
 
         # Parse out and re-assemble the date added in order to account for differences in sheets' format, typos, etc.
-        date_parts = re.search(r'(\d+)\/(\d+)\/(\d+)', row[date_added_column].strip())
+        date_parts = re.search(r'(\d+)\/(\d+)\/(\d+)', date_column_string)
         month = date_parts.group(1)
         day = date_parts.group(2)
         year = date_parts.group(3)
@@ -300,7 +306,7 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             if current_transfer[1] == existing_transfer[1] and current_transfer[3] == existing_transfer[3]:
                 # If we already saw this transfer in another transfer portal spreadsheet, check to see if it had a destination team listed.
                 already_present = True
-                if current_transfer[2] != '?' and existing_transfer[2] == '?':
+                if current_transfer[2] != 'player' and existing_transfer[2] == 'player':
                     # If the previous mention of this transfer didn't list the player's position, but this spreadsheet does, add it.
                     existing_transfer[2] == current_transfer[2]
 
@@ -388,31 +394,28 @@ def construct_email(title, decoded_description):
 
     email_body += '<br><a href="%s">EliteProspects Player Page</a></p>' % (ep_player_page)
 
-    # Assemble email object.
-    email = MIMEMultipart()
-    email.attach(MIMEText(email_body, 'html'))
-    email['Subject'] = '[CollegeHockeyTransfers] Transaction Alert'
-
     # Load the player's EliteProspects page and search for a profile picture.
     ep_player_page_data = requests.get(ep_player_page)
     ep_player_page_html = BeautifulSoup(ep_player_page_data.text, 'html.parser')
-    ep_player_page_picture_section = ep_player_page_html.find('div', {'class': 'ep-entity-header__main-image'})
-    ep_player_page_picture_search = re.search(r'url\([\"\'](.*)[\"\']\);', ep_player_page_picture_section['style'])
+    ep_player_page_picture_section = ep_player_page_html.find('img', {'class': 'ProfileImage_profileImage__JLd31 ProfileImage_playerImage__1fLtE'})
+    ep_player_picture_link = ep_player_page_picture_section['src']
+
+    print('Player profile picture link:', ep_player_picture_link)
 
     # If it exists, attach the player page's profile photo to the email's body.
-    if ep_player_page_picture_search and ep_player_page_picture_search.group(1) != 'https://static.eliteprospects.com/images/player-fallback.jpg':
-        ep_player_picture_link = ep_player_page_picture_search.group(1)
-
+    if ep_player_picture_link != 'https://cdn.eliteprospects.com/icons/placeholders/player-logo.svg':
         # If the path to their profile picture is missing the 'https:' prefix, add it.
         if 'https:' not in ep_player_picture_link:
             ep_player_picture_link = 'https:' + ep_player_picture_link
 
-        # Determine the profile picture's file type so we know what kind of image to attach to the email.
-        file_name = ep_player_picture_link.split('/')[-1]
-        file_extension = '.' + file_name.split('.')[-1]
+        email_body += '<img src="%s"/>' % (ep_player_picture_link)
 
-        img_data = requests.get(ep_player_picture_link).content
-        email.attach(MIMEImage(img_data, name='ep_player_picture', _subtype=file_extension))
+    print('Email body:\n', email_body)
+
+    # Assemble email object.
+    email = MIMEMultipart()
+    email.attach(MIMEText(email_body, 'html'))
+    email['Subject'] = '[CollegeHockeyTransfers] Transaction Alert'
 
     return email
 
@@ -423,14 +426,18 @@ def send_transaction_email(transaction_id, title, decoded_description, team_id, 
         email_object = construct_email(title, decoded_description)
 
         # Query the emails of individuals who have subscribed to the team in question.
-        query = ("SELECT Email FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
+        query = ("SELECT Email,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
         cursor.execute(query)
         recipient_list = list(cursor.fetchall())
 
         # Send an email to each subscriber for the current team as long as we haven't sent them an email about this transfer already.
         for recipient in recipient_list:
+            edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[1])
+            edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
+            email_object.attach(MIMEText(edit_line, 'html'))
+
             try:
-                server.sendmail(sender_email, [recipient], email_object.as_string())
+                server.sendmail(sender_email, [recipient[0]], email_object.as_string())
             except smtplib.SMTPRecipientsRefused:
                 # Recipient refused the email, so just move on to the next email address in recipient_list.
                 continue
@@ -496,6 +503,9 @@ def process_feed(transaction_ids_list, server, cursor):
 
         # Send an email notification as long as the transaction one NCAA D1 team. If there's two, skip it because it'll be handled when looking at transfer portal spreadsheets.
         if len(ncaa_d1_team_ids) == 1:
+            print(item.title)
+            print(decoded_description)
+
             send_transaction_email(transaction_id, item.title, decoded_description, ncaa_d1_team_ids[0], server, cursor)
 
 def main():
@@ -517,7 +527,9 @@ def main():
     # Monitor online transfer portal spreadsheets for transfers involving two NCAA D1 teams.
     rink_live_portal_data = get_portal_spreadsheet_data(rink_live_spreadsheet_id, rink_live_tab_name)
     gopher_puck_live_portal_data = get_portal_spreadsheet_data(gopher_puck_live_shreadsheet_id, gopher_puck_live_tab_name)
+
     db_team_names = list(ep_team_ids_to_name.values())
+
     process_portal_spreadsheet(rink_live_portal_data, db_team_names, 2, 1, 6, 0, 11, 15)
     process_portal_spreadsheet(gopher_puck_live_portal_data, db_team_names, 1, 2, 3, 1, 5, 0)
     construct_and_send_transfer_message(server, cursor)

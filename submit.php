@@ -1,5 +1,5 @@
 <?php
-    include 'website_db_credentials.php';
+    include 'global_variables.php';
     error_reporting(E_ERROR | E_PARSE);
 
     use PHPMailer\PHPMailer\PHPMailer;
@@ -12,7 +12,7 @@
     require 'vendor\autoload.php';
 
     // This method sends the user a confirmation email listing the selected team(s). If the email address is invalid, it's NOT added to the database.
-    function sendConfirmationEmail($email, $teamArray) {
+    function sendConfirmationEmail($email, $teamArray, $uuid) {
         global $smtp_username;
         global $gmail_app_password;
         global $sender_email;
@@ -37,15 +37,19 @@
             $mail->addAddress($email);
             //$mail->addReplyTo('info@example.com', 'Information');
 
-            //Content
+            // Assemble the email's contents.
             $mail->isHTML(true);
             $mail->Subject = 'CollegeHockeyTransfers Sign-Up Confirmation Email';
 
             $body = 'Thank you for signing up for CollegeHockeyTransfers. You have signed up to hear about transactions for the following teams:<br>';
 
+            // List the teams te user subscribed to.
             for ($i = 0; $i < sizeof($teamArray); $i++) {
                 $body = $body . '<b>' . $teamArray[$i] . '</b><br>';
             }
+
+            // Add the edit link.
+            $body = $body . '<br>Change or cancel your subscription <a href="http://localhost/CollegeHockeyTransfers/edit.php?email=' . $email . '&uuid=' . $uuid . '">here</a>.';
 
             $mail->Body = $body;
             //$mail->AltBody = 'This is the body in plain text for non-HTML mail clients'; // Do I really need a non-HTML body option?
@@ -69,6 +73,7 @@
         global $db_username;
         global $db_password;
         global $database_name;
+        global $teams;
 
         // Connect to the database
         $mysqli = new mysqli($db_ip, $db_username, $db_password, $database_name);
@@ -90,7 +95,7 @@
         }
 
         // Get the email address entered in the text box.
-        $email = $_POST['email'];
+        $email = trim($_POST['email']);
 
         // Query (using a prepared statement) the email that was submitted to see if it's already in the database.
         $checkEmailstatement = $mysqli->prepare("SELECT * FROM Email AS E WHERE E.Email=?");
@@ -119,7 +124,7 @@
         $insertEmailStatement->execute();
 
         // The email address is NOT already in the database, so send a confirmation email listing the teams the user signed up for.
-        if (!sendConfirmationEmail($email, $teamArray)) {
+        if (!sendConfirmationEmail($email, $teamArray, $uuid)) {
             // The confirmation email failed to send.
             echo "<script type='text/javascript'>alert('The confirmation email failed to send, please try again. If the problem persists, please try again later.');</script>";
             $checkEmailstatement->close();
@@ -133,28 +138,17 @@
         $emailIdstatement->bind_param('s', $email);
         $emailIdstatement->execute();
         $result = $emailIdstatement->get_result();
-
         $row = mysqli_fetch_assoc($result);
         $emailID = $row['Id'];
         $emailIdstatement->free_result();
-
-        // For each team selected by the user, retrieve its corresponding team ID from the Team table and insert an (email, team ID) pair into the Subscription table.
-        $currentTeam = '';
-        $teamIdStatement = $mysqli->prepare("SELECT Id FROM Team AS T WHERE T.TeamName=?");
-        $teamIdStatement->bind_param('s', $currentTeam);
 
         $dbTeamID = '';
         $subscriptionStatement = $mysqli->prepare("INSERT INTO Subscription (EmailId, TeamId) VALUES (?, ?)");
         $subscriptionStatement->bind_param('ii', $emailID, $dbTeamID);
 
         for ($i = 0; $i < sizeof($teamArray); $i++) {
-            // Retrieve the team ID.
-            $currentTeam = $teamArray[$i];
-            $teamIdStatement->execute();
-            $result = $teamIdStatement->get_result();
-
-            $row = mysqli_fetch_assoc($result);
-            $dbTeamID = $row['Id'];
+            // Retrieve the team's corresponding team ID.
+            $dbTeamID = $teams[$teamArray[$i]];
 
             // Add the (email, team ID) pair to the Subscription table.
             $subscriptionStatement->execute();
@@ -165,9 +159,7 @@
         $checkEmailstatement->close();
         $insertEmailStatement->close();
         $emailIdstatement->close();
-        $teamIdStatement->close();
         $subscriptionStatement->close();
-
         $mysqli->close();
     }
 
