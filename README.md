@@ -23,6 +23,9 @@ If the email is detailing an inter-university transfer done through the transfer
 The email's contents will look something like this:\
 ```Michigan Tech F John Doe has transferred to Wisconsin.```
 
+or this:\
+```Michigan Tech F John Doe has entered the transfer portal.```
+
 These kinds of emails will not include a picture or link to the player's EliteProspects page. However, all emails (regardless of the type of transaction it details) will include a link to the edit page, where you can make changes to your selections or unsubscribe entirely.
 
 <u>**How do I sign up?**</u>\
