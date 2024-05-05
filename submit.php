@@ -22,8 +22,6 @@
 
         try {
             // Server settings.
-            //$mail->SMTPDebug = SMTP::DEBUG_SERVER;
-            $mail->SMTPDebug = 2;
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
             $mail->SMTPAuth = true;
@@ -31,33 +29,37 @@
             $mail->Password = $gmail_app_password;
             $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
             $mail->Port = 587;
-
-            // Set to/from.
             $mail->setFrom($sender_email, 'CollegeHockeyTransfers');
             $mail->addAddress($email);
-            //$mail->addReplyTo('info@example.com', 'Information');
+            $mail->isHTML(true);
 
             // Assemble the email's contents.
-            $mail->isHTML(true);
             $mail->Subject = 'CollegeHockeyTransfers Sign-Up Confirmation Email';
-
-            $body = 'Thank you for signing up for CollegeHockeyTransfers. You have signed up to hear about transactions for the following teams:<br>';
+            $starterBody = 'Thank you for signing up for CollegeHockeyTransfers. You have signed up to hear about transactions for the following teams:<br>';
+            $selectedTeams = '';
 
             // List the teams te user subscribed to.
             for ($i = 0; $i < sizeof($teamArray); $i++) {
-                $body = $body . '<b>' . $teamArray[$i] . '</b><br>';
+                $selectedTeams = $selectedTeams . '<b>' . $teamArray[$i] . '</b><br>';
             }
 
             // Add the edit link.
-            $body = $body . '<br>Change or cancel your subscription <a href="http://localhost/CollegeHockeyTransfers/edit.php?email=' . $email . '&uuid=' . $uuid . '">here</a>.';
+            $footer = '<br>Change or cancel your subscription <a href="http://localhost/CollegeHockeyTransfers/edit.php?email=' . $email . '&uuid=' . $uuid . '">here</a>.';
 
-            $mail->Body = $body;
-            //$mail->AltBody = 'This is the body in plain text for non-HTML mail clients'; // Do I really need a non-HTML body option?
+            // Assemble the email's body using the various parts constructed so far.
+            $mail->Body = $starterBody . $selectedTeams . $footer;
 
             if (!$mail->send()) {
                 // The email failed to send (if the email address in invalid, that would NOT cause the email to fail to send).
                 return 0;
             }
+
+            // Send an email to william@collicott.com listing the user's email and team(s) they signed up for.
+            $mail->clearAllRecipients();
+            $mail->addAddress('william@collicott.com');
+            $mail->Subject = 'CHT Sign Up Alert';
+            $mail->Body = $email . ' has signed up for the following teams:<br>' . $selectedTeams;
+            $mail->send();
 
             // The confirmation email was sent successfully.
             return 1;
@@ -123,7 +125,8 @@
         $insertEmailStatement->bind_param('ss', $email, $uuid);
         $insertEmailStatement->execute();
 
-        // The email address is NOT already in the database, so send a confirmation email listing the teams the user signed up for.
+        // The email address is NOT already in the database, so send a confirmation email to the user listing the team(s) they signed up for.
+        // Furthermore, send an email to william@collicott.com indicating the email address of the user and the team(s) they selected.
         if (!sendConfirmationEmail($email, $teamArray, $uuid)) {
             // The confirmation email failed to send.
             echo "<script type='text/javascript'>alert('The confirmation email failed to send, please try again. If the problem persists, please try again later.');</script>";
