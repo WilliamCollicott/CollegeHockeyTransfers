@@ -27,33 +27,47 @@
     if ($mysqli->connect_errno) {
         $mysqli->close();
         echo "<script type='text/javascript'>alert('There was a problem accessing the database. Please try again. If the problem persists, please try again later.');</script>";
-        echo "<script>window.top.location='main.html'</script>";
+        echo "<script>window.top.location='index.html'</script>";
         return;
     }
 
-    // Retrieve the user's email and UUID that were passed in from edit.php's form submission.
+    // Retrieve the user's email/phone number and UUID that were passed in from edit.php's form submission.
     $email = trim($_POST['email']);
+    $phoneNumber = trim($_GET['phoneNumber']);
     $uuid = trim($_POST['uuid']);
 
-    // Query the database to get the email ID that coresponds to the user's email and UUID.
-    $getEmailIdStatement = $mysqli->prepare("SELECT Id FROM Email WHERE Email = ? AND UUID = ?");
-    $getEmailIdStatement->bind_param('ss', $email, $uuid);
-    $getEmailIdStatement->execute();
-    $result = $getEmailIdStatement->get_result();
-
-    if ($result->num_rows == 0) {
-        // There's no records to show because the email and UUID pair is not in the database, so alert the user.
-        echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your email in the database.</h2>';
+    // Query the database to get the ID that coresponds to the user's email/phone number and UUID, depending on form of communication they signed up for.
+    if ($email != '')
+    {
+        $getContactTableIdStatement = $mysqli->prepare("SELECT Id FROM Contact WHERE Email = ? AND UUID = ?");
+        $getContactTableIdStatement->bind_param('ss', $email, $uuid);
     }
     else {
-        // Extract the email ID from the result.
+        $getContactTableIdStatement = $mysqli->prepare("SELECT Id FROM Contact WHERE PhoneNumber = ? AND UUID = ?");
+        $getContactTableIdStatement->bind_param('is', $phoneNumber, $uuid);
+    }
+
+    $getContactTableIdStatement->execute();
+    $result = $getContactTableIdStatement->get_result();
+
+    if ($result->num_rows == 0) {
+        // There's no records to show because the email/phone number and UUID pair is not in the database, so alert the user.
+        if ($email != '') {
+            echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your email in the database.</h2>';
+        }
+        else {
+            echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your phone number in the database.</h2>';
+        }
+    }
+    else {
+        // Extract the ID from the result.
         $row = mysqli_fetch_assoc($result);
-        $emailID = $row['Id'];
-        $getEmailIdStatement->free_result();
+        $contactID = $row['Id'];
+        $getContactTableIdStatement->free_result();
 
         // Remove all the user's subscriptions.
-        $removeSubcriptionStatement = $mysqli->prepare("DELETE FROM Subscription WHERE EmailId = ?");
-        $removeSubcriptionStatement->bind_param('s', $emailID);
+        $removeSubcriptionStatement = $mysqli->prepare("DELETE FROM Subscription WHERE ContactId = ?");
+        $removeSubcriptionStatement->bind_param('i', $contactID);
         $removeSubcriptionStatement->execute();
         $removeSubcriptionStatement->free_result();
 
@@ -62,8 +76,8 @@
 
         // Make a prepared statement for inserting the user's new selections.
         $dbTeamID = '';
-        $insertSubscriptionStatement = $mysqli->prepare("INSERT INTO Subscription (EmailId, TeamId) VALUES (?, ?)");
-        $insertSubscriptionStatement->bind_param('ii', $emailID, $dbTeamID);
+        $insertSubscriptionStatement = $mysqli->prepare("INSERT INTO Subscription (ContactId, TeamId) VALUES (?, ?)");
+        $insertSubscriptionStatement->bind_param('ii', $contactID, $dbTeamID);
 
         $selectedTeams = '';
 
@@ -87,18 +101,30 @@
         }
 
         if ($noTeamsSelected) {
-            // If the user submitted an edit form without any teams selected, remove their email from the Email table.
-            $removeEmailStatement = $mysqli->prepare("DELETE FROM Email WHERE Email = ?");
-            $removeEmailStatement->bind_param('s', $email);
+            // If the user submitted an edit form without any teams selected, remove their email/phone number from the Contact table.
+            if ($email != '') {
+                $removeEmailStatement = $mysqli->prepare("DELETE FROM Contact WHERE Email = ?");
+                $removeEmailStatement->bind_param('s', $email);
+            }
+            else {
+                $removeEmailStatement = $mysqli->prepare("DELETE FROM Contact WHERE PhoneNumber = ?");
+                $removeEmailStatement->bind_param('i', $phoneNumber);
+            }
+
             $removeEmailStatement->execute();
             $removeEmailStatement->close();
 
             // Alert the user that they've been removed from all communications.
-            echo '<h2 style="text-align: center;">You have completely unsubscribed from CollegeHockeyTransfers and your email have been removed from the database. You may now close this page.</h2>';
+            echo '<h2 style="text-align: center;">You have completely unsubscribed from CollegeHockeyTransfers and your contact information has been removed from the database. You may now close this page.</h2>';
 
             // Set the subject and body variables for the email to william@collicott.com indicating the edit action.
             $subject = 'CHT Complete Unsubscribe Alert';
-            $body = $email . ' has completely unsubscribed.';
+            if ($email != '') {
+                $body = $email . ' has completely unsubscribed.';    
+            }
+            else {
+                $body = $phoneNumber . ' has completely unsubscribed.';
+            }   
         }
         else {
             // If the user submitted an edit form with at least one team selected, alert them that their changes have been applied.
@@ -106,11 +132,16 @@
 
             // Set the subject and body variables for the email to william@collicott.com indicating the unsubscribe action.
             $subject = 'CHT Edit Alert';
-            $body = $email . ' has changed their subscriptions to the following teams:<br>' . $selectedTeams;
+            if ($email != '') {
+                $body = $email . ' has changed their subscriptions to the following teams:<br>' . $selectedTeams;    
+            }
+            else {
+                $body = $phoneNumber . ' has changed their subscriptions to the following teams:<br>' . $selectedTeams;
+            }
         }
 
         try {
-            // Set up the server settings for emailing william@collicott.com to indicate an edit or email.
+            // Set up the server settings for emailing william@collicott.com to indicate an edit or unsubscribe action.
             $mail = new PHPMailer(true);
             $mail->isSMTP();
             $mail->Host = 'smtp.gmail.com';
@@ -132,7 +163,7 @@
         }
     }
 
-    $getEmailIdStatement->close();
+    $getContactTableIdStatement->close();
     $removeSubcriptionStatement->close();
     $insertSubscriptionStatement->close();
     $mysqli->close();

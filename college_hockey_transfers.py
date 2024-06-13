@@ -86,10 +86,14 @@ ep_team_ids_to_name = {
     '786'   : 'Yale'
 }
 
+# Asseble a list of all the team names in ep_team_ids_to_name.
+db_team_names = list(ep_team_ids_to_name.values())
+
 # Mapping of team names in the portal spreadsheets to their corresponding team name in the database.
 spreadsheet_team_name_to_db_name = {
     'U.S. Air Force Academy'               : 'Air Force',
     'AIC'                                  : 'American International',
+    'American Int\'l'                      : 'American International',
     'American International College'       : 'American International',
     'Arizona State University'             : 'Arizona State',
     'U.S. Military Academy'                : 'Army',
@@ -107,6 +111,7 @@ spreadsheet_team_name_to_db_name = {
     'Ferris State University'              : 'Ferris State',
     'Harvard University'                   : 'Harvard',
     'Lake Superior State University'       : 'Lake Superior State',
+    'Lake Superior St'                     : 'Lake Superior State',
     'Lindenwood University'                : 'Lindenwood',
     'Long Island University'               : 'Long Island',
     'Mercyhurst University'                : 'Mercyhurst',
@@ -127,15 +132,19 @@ spreadsheet_team_name_to_db_name = {
     'Rochester Institute of Technology'    : 'RIT',
     'Robert Morris University'             : 'Robert Morris',
     'Rensselaer Polytechnic Institute'     : 'RPI',
+    'Rensselaer'                           : 'RPI',
     'Sacred Heart University'              : 'Sacred Heart',
     'St. Cloud State'                      : 'St. Cloud',
     'St. Cloud State University'           : 'St. Cloud',
+    'St. Cloud St.'                        : 'St. Cloud',
     'St. Lawrence University'              : 'St. Lawrence',
     'Stonehill College'                    : 'Stonehill',
     'UMass Lowell'                         : 'UMass-Lowell',
     'University of Massachusetts Lowell'   : 'UMass-Lowell',
     'Union College (New York)'             : 'Union',
     'University of Alaska Anchorage'       : 'Alaska-Anchorage',
+    'Alaska Anchorage'                     : 'Alaska-Anchorage',
+    'Anchorage'                            : 'Alaska-Anchorage',
     'Alaska'                               : 'Alaska-Fairbanks',
     'University of Alaska Fairbanks'       : 'Alaska-Fairbanks',
     'University of Connecticut'            : 'Connecticut',
@@ -143,10 +152,12 @@ spreadsheet_team_name_to_db_name = {
     'University of Denver'                 : 'Denver',
     'University of Maine'                  : 'Maine',
     'University of Massachusetts, Amherst' : 'Massachusetts',
+    'UMass'                                : 'Massachusetts',
     'University of Michigan'               : 'Michigan',
     'University of Minnesota, Twin Cities' : 'Minnesota',
     'Minnesota Duluth'                     : 'Minnesota-Duluth',
     'University of Minnesota Duluth'       : 'Minnesota-Duluth',
+    'Minn.-Duluth'                         : 'Minnesota-Duluth',
     'University of Nebraska Omaha'         : 'Omaha',
     'University of New Hampshire'          : 'New Hampshire',
     'University of North Dakota'           : 'North Dakota',
@@ -202,18 +213,12 @@ def get_portal_spreadsheet_data(spreadsheet_id, sheet_name):
         print(err)
         return []
 
-# Send the provided text in an email to the subscribers of each team mentioned in teams_involved.
-def send_transfer_email(text, teams_involved, server, cursor):
-    # Construct the email object.
-    email_body = '<p>' + text + '</p>'
-    email_object = MIMEMultipart()
-    email_object.attach(MIMEText(email_body, 'html'))
-    email_object['Subject'] = '[CollegeHockeyTransfers] Transfer Alert'
+# Send the provided message in an email/text message to the subscribers of each team mentioned in teams_involved.
+def send_transfer_notification(text, teams_involved, server, cursor):
+    # Query the contact of individuals who have subscribed to the team in question.
+    query = "SELECT Email,PhoneNumber,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Contact AS C ON C.Id = S.ContactId WHERE TeamName = '%s'" % (teams_involved[0])
 
-    # Query the emails of individuals who have subscribed to the team in question.
-    query = "SELECT Email,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (teams_involved[0])
-
-    # If a player's transfer lists a destination team, add an OR clause to the query so we get the email addresses both teams' subscribers.
+    # If a player's transfer lists a destination team, add an OR clause to the query so we get the contact information both teams' subscribers.
     if len(teams_involved) == 2:
         query += " OR TeamName = '%s'" % teams_involved[1]
 
@@ -221,32 +226,44 @@ def send_transfer_email(text, teams_involved, server, cursor):
 
     # Convert to a set and then back to a list in order to remove duplicates.
     recipient_list = list(set(list(cursor.fetchall())))
+    
+    # Assemble email to be published.
+    email_body = '<p>' + text + '</p>'
+    email_object = MIMEMultipart()
+    email_object.attach(MIMEText(email_body, 'html'))
+    email_object['Subject'] = '[CollegeHockeyTransfers] Transfer Alert'
 
-    # Send an email to each recipient.
+    # Assemble text message to be published.
+
+    # Send an email/text message to each recipient.
     for recipient in recipient_list:
-        edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[1])
-        edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
-        email_object.attach(MIMEText(edit_line, 'html'))
+        if recipient[0] is not None:
+            # Notify via email.
+            edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[2])
+            edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
+            email_object.attach(MIMEText(edit_line, 'html'))
 
-        try:
-            server.sendmail(sender_email, [recipient[0]], email_object.as_string())
-        except smtplib.SMTPRecipientsRefused:
-            # Recipient refused the email, so just move on to the next email address in recipient_list.
+            try:
+                server.sendmail(sender_email, [recipient[0]], email_object.as_string())
+            except smtplib.SMTPRecipientsRefused:
+                # Recipient refused the email, so just move on to the next email address in recipient_list.
+                continue
+        else:
+            # Notify via text message
             continue
 
 # Parse a transfer portal spreadsheet's data into a 'master' list that represents a running union of transfers amongst all spreadsheets analyzed so far.
-def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_row, origin_team_column, position_column, player_name_column, destination_team_column, date_added_column):
+def process_portal_spreadsheet(portal_spreadsheet_data, starting_row, origin_team_column, player_name_column, destination_team_column):
     # Loop through each row in the spreadsheet data.
     for row in portal_spreadsheet_data[starting_row:]:
         # Handle situations where sometimes a row's columns are empty and represented as not part of the row instead of just an empty string.
         try:
             spreadsheet_origin_team = row[origin_team_column].strip()
-            date_column_string = row[date_added_column].strip()
 
-            if '' in [spreadsheet_origin_team, date_column_string]:
+            if spreadsheet_origin_team == '':
                 raise IndexError()
         except IndexError:
-            # If there's no origin team or date for when the player entered the portal listed, move on to the next row.
+            # If there's no origin team listed, move on to the next row.
             continue
 
         try:
@@ -254,14 +271,8 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
         except IndexError:
             spreadsheet_destination_team = '?'
 
-        try:
-            # A player's position will be represented as either F, D, or G.
-            position = 'player' if row[position_column][0].upper() == '' else row[position_column].strip()[0].upper()
-        except IndexError:
-            position = 'player'
-
-        # Trim off any leading or trailing white space.
-        spreadsheet_player_name = row[player_name_column].strip()
+        # Trim off any leading or trailing white space, plus any periods to correct 'T.J.' to 'TJ'.
+        spreadsheet_player_name = row[player_name_column].strip().replace('.', '')
 
         if spreadsheet_origin_team in db_team_names:
             # Use what's in the spreadsheet if the raw text maps to a team name in the database.
@@ -274,8 +285,8 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             print('Skip reporing %s\'s transfer because the origin team could not be matched: %s' % (spreadsheet_player_name, spreadsheet_origin_team))
             continue
 
-        if '(Withdrew from Portal)' in spreadsheet_destination_team or 'WITHDRAWN' in spreadsheet_destination_team:
-            # If a player has withdrawn from the portal, make note of that.
+        if spreadsheet_origin_team in spreadsheet_destination_team and re.search(r'withdrew|withdrawn', spreadsheet_destination_team, re.IGNORECASE):
+            # The player withdrew from the portal and is returning to their origin school.
             db_destination_team = db_origin_team
         elif spreadsheet_destination_team in db_team_names or spreadsheet_destination_team == '?': 
             # If the spreadsheet's destination team either matches a database team name or is unknown, use spreadsheet_destination_team. 
@@ -284,42 +295,37 @@ def process_portal_spreadsheet(portal_spreadsheet_data, db_team_names, starting_
             # Otherwise, we know that the spreadsheet's destination team maps to one in the database.
             db_destination_team = spreadsheet_team_name_to_db_name[spreadsheet_destination_team]
         else:
-            # The destination team could not be matched, so don't report this transfer. For example, the player could be transferring to a D3, club, or junior team.
+            # If the destination team could not be matched, skip the transfer. The player could be transferring to a pro, D3, club, non-NCAA university, or junior team.
             print('Skip reporing %s\'s transfer because the destination team could not be matched: %s' % (spreadsheet_player_name, spreadsheet_destination_team))
             continue
 
-        # Parse out and re-assemble the date added in order to account for differences in sheets' format, typos, etc.
-        date_parts = re.search(r'(\d+)\/(\d+)\/(\d+)', date_column_string)
-        month = date_parts.group(1)
-        day = date_parts.group(2)
-        year = date_parts.group(3)
+        current_transfer = [spreadsheet_player_name, db_origin_team, db_destination_team]
 
-        if not year.startswith('20'):
-            year = '20' + year
-
-        date_added = month + '/' + day + '/' + year
-        current_transfer = [date_added, spreadsheet_player_name, position, db_origin_team, db_destination_team]
-        already_present = False
+        # Split the player's name into a first and last name.        
+        current_first_last_name = current_transfer[0].split(' ', 1)
 
         # Look for the current transfer in our list ones we've already compiled from other transfer portal spreadsheets.
+        already_present = False
         for existing_transfer in inter_university_transfers:
-            if current_transfer[1] == existing_transfer[1] and current_transfer[3] == existing_transfer[3]:
-                # If we already saw this transfer in another transfer portal spreadsheet, check to see if it had a destination team listed.
-                already_present = True
-                if current_transfer[2] != 'player' and existing_transfer[2] == 'player':
-                    # If the previous mention of this transfer didn't list the player's position, but this spreadsheet does, add it.
-                    existing_transfer[2] == current_transfer[2]
+            # Split the current existing transfer's player name into it's first and last names.
+            existing_first_last_name = existing_transfer[0].split(' ', 1)
 
-                if current_transfer[4] != '?' and existing_transfer[4] == '?':
+            # If the current transfer's first name has the same first two letters, last name, and origin team as an entry in inter_university_transfers, we'll count that as a match.
+            if current_first_last_name[0][:2].lower() == existing_first_last_name[0][:2].lower() and current_first_last_name[1].lower() == existing_first_last_name[1].lower() and current_transfer[1] == existing_transfer[1]:
+                already_present = True
+                
+                # We already saw this transfer in another transfer portal spreadsheet, so check to see if it had a destination team listed.
+                if current_transfer[2] != '?' and existing_transfer[2] == '?':
                     # If the previous mention of this transfer didn't list a destination team, but this spreadsheet does, add it.
-                    existing_transfer[4] = current_transfer[4]
-                    break
+                    existing_transfer[2] = current_transfer[2]
+
+                break
 
         # If this tranfer was not previously recorded, add it to our list of transfers to publish (as long as we didn't publish it in a previous invocation).
         if not already_present:
             inter_university_transfers.append(current_transfer)
 
-# Examine each transfer we compiled from the spreadsheets and create a message for it. Then, send it out via email.
+# Examine each transfer we compiled from the spreadsheets and create a message for it. Then, send it out via email/text message.
 def construct_and_send_transfer_message(server, cursor):
     # Gather a list of lines from the file keeping track of which transfers have already been published.
     with open(published_transfers_path + 'published_transfers.txt', 'r') as published_transfers_file:
@@ -328,53 +334,58 @@ def construct_and_send_transfer_message(server, cursor):
     with open(published_transfers_path + 'published_transfers.txt', 'w') as published_transfers_file:
         # For each transfer that identified in the portal spreadsheets, check if it exists in published_transfers.txt (it was already published).
         for transfer in inter_university_transfers:
-            date_added = transfer[0]
-            player_name = transfer[1]
-            player_position = transfer[2]
-            origin_team = transfer[3]
-            destination_team = transfer[4]
-
+            player_name = transfer[0]
+            origin_team = transfer[1]
+            destination_team = transfer[2]
+            current_first_last_name = player_name.split(' ', 1)
             transfer_already_published = False
 
             for published_transfer in published_transfers_file_lines:
                 # Separate each line from published_transfers.txt into an array of its parts.
                 published_transfer_parts = re.split(',', published_transfer.rstrip())
 
-                # If we find a matching transfer that was already published (having the same transfer portal entry date and player name), check if the
-                # previous publish was incomplete (didn't list a destination team). If it was, send it again to announce the destination team.
-                if date_added == published_transfer_parts[0] and player_name == published_transfer_parts[1]:
+                # Split already published tranfer's player name into a first and last name.
+                published_first_last_name = published_transfer_parts[0].split(' ', 1)
+
+                # If we find a matching transfer that was already published (first name having the same first two letters, same last last name, and same origin team), check if the previous publish
+                # was incomplete (didn't list a destination team). If it was, send it again to announce the destination team.
+                if current_first_last_name[0][:2].lower() == published_first_last_name[0][:2].lower() and current_first_last_name[1].lower() == published_first_last_name[1].lower() and origin_team == published_transfer[1]:
                     transfer_already_published = True
 
                     # If the version of the transfer from published_transfers.txt listed '?' as the destination team, and the version that was identified
                     # in the latest invocation's destination team is NOT unknown, send out a second, complete notification.
-                    if published_transfer_parts[4] == '?' and destination_team != '?':
-                        # If the player has withdrawn from the portal and returned to their origin team, send out an update to complete the transfer.
+                    if published_transfer_parts[2] == '?' and destination_team != '?':
                         if origin_team == destination_team:
-                            text = '%s %s %s has withdrawn from the transfer portal.' % (origin_team, player_position, player_name)
-                            send_transfer_email(text, [origin_team], server, cursor)
+                            # The player has withdrawn from the portal and returned to their origin team.
+                            text = '%s\'s %s has withdrawn from the transfer portal and returned to %s.' % (origin_team, player_name, origin_team)
+                            teams_involved = [origin_team]
                         else:
-                            text = '%s %s %s has transferred to %s.' % (origin_team, player_position, player_name, destination_team)
-                            send_transfer_email(text, [origin_team, destination_team], server, cursor)
+                            text = '%s\'s %s has transferred to %s.' % (origin_team, player_name, destination_team)
+                            teams_involved = [origin_team, destination_team]
+                        
+                        send_transfer_notification(text, teams_involved, server, cursor)
 
                         # When recording this transfer in published_transfers.txt, we want it to be the version that is complete (lists a destination team).
-                        published_transfers_file.write('%s,%s,%s,%s,%s\n' % (date_added, player_name, player_position, origin_team, destination_team))
-                        break
+                        published_transfers_file.write('%s,%s,%s\n' % (player_name, origin_team, destination_team))
+                    else:
+                        published_transfers_file.write(published_transfer)
 
-                    published_transfers_file.write(published_transfer)
+                    break
 
             if not transfer_already_published:
                 # A new transfer has been identified, so publish a notification for it.
                 if destination_team == '?':
-                    text = '%s %s %s has entered the transfer portal.' % (origin_team, player_position, player_name)
-                    send_transfer_email(text, [origin_team], server, cursor)
+                    text = '%s\'s %s has entered the transfer portal.' % (origin_team, player_name)
+                    teams_involved = [origin_team]
                 elif origin_team == destination_team:
-                    text = '%s %s %s entered the transfer portal, but later withdrew.' % (origin_team, player_position, player_name)
-                    send_transfer_email(text, [origin_team], server, cursor)
+                    text = '%s\'s %s entered the transfer portal, but later withdrew to return to %s.' % (origin_team, player_name, origin_team)
+                    teams_involved = [origin_team]
                 else:
-                    text = '%s %s %s has transferred to %s.' % (origin_team, player_position, player_name, destination_team)
-                    send_transfer_email(text, [origin_team, destination_team], server, cursor)
+                    text = '%s\'s %s has transferred to %s.' % (origin_team, player_name, destination_team)
+                    teams_involved = [origin_team, destination_team]
 
-                published_transfers_file.write('%s,%s,%s,%s,%s\n' % (date_added, player_name, player_position, origin_team, destination_team))
+                send_transfer_notification(text, teams_involved, server, cursor)
+                published_transfers_file.write('%s,%s,%s\n' % (player_name, origin_team, destination_team))
 
 # This method parses a transfer's description section and assembles the string representing the message to be published.
 def construct_email(title, decoded_description):
@@ -384,7 +395,7 @@ def construct_email(title, decoded_description):
     date = details.group(2)
     ep_player_page = details.group(3)
 
-    # Assemble the formatted string
+    # Assemble the formatted string.
     email_body = '<p>%s<br>%s<br>%s' % (title, status, date)
 
     # If the transfer's description has 'additional information' (not all will have this), add it onto the message.
@@ -419,31 +430,41 @@ def construct_email(title, decoded_description):
 
     return email
 
-# For a given transaction, delegate the message construction to construct_message() and publish it.
-def send_transaction_email(transaction_id, title, decoded_description, team_id, server, cursor):
+# For a given transaction, construct the message and send it.
+def send_transaction_notification(transaction_id, title, decoded_description, team_id, server, cursor):
     with open(transaction_ids_path + 'transaction_ids.txt', 'a') as transaction_ids_file:
+        # Query the contact information of individuals who have subscribed to the team in question.
+        query = ("SELECT Email,PhoneNumber,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Contact AS C ON C.Id = S.ContactId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
+        cursor.execute(query)
+        recipient_list = list(cursor.fetchall())
+        
         # Assemble the email to be published.
         email_object = construct_email(title, decoded_description)
 
-        # Query the emails of individuals who have subscribed to the team in question.
-        query = ("SELECT Email,UUID FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE TeamName = '%s'" % (ep_team_ids_to_name[team_id]))
-        cursor.execute(query)
-        recipient_list = list(cursor.fetchall())
+        # Assemble text message to be published.
 
         # Send an email to each subscriber for the current team as long as we haven't sent them an email about this transfer already.
         for recipient in recipient_list:
-            edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[1])
-            edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
-            email_object.attach(MIMEText(edit_line, 'html'))
+            if recipient[0] is not None:
+                # Notify via email.
+                edit_link = 'http://localhost/CollegeHockeyTransfers/edit.php?email=%s&uuid=%s' % (recipient[0], recipient[2])
+                edit_line = '<p>Change or cancel your subscription <a href="%s">here</a>.</p>' % (edit_link)
+                email_object.attach(MIMEText(edit_line, 'html'))
 
-            try:
-                server.sendmail(sender_email, [recipient[0]], email_object.as_string())
-            except smtplib.SMTPRecipientsRefused:
-                # Recipient refused the email, so just move on to the next email address in recipient_list.
+                try:
+                    server.sendmail(sender_email, [recipient[0]], email_object.as_string())
+                except smtplib.SMTPRecipientsRefused:
+                    # Recipient refused the email, so just move on to the next email address in recipient_list.
+                    continue
+            else:
+                # Notify by text message.
                 continue
 
-        date_and_time = datetime.datetime.now()
-        transaction_ids_file.write(transaction_id + ',' + str(date_and_time) + '\n')
+        # If there was at least one notification sent, record this transaction as one that's been sent out.
+        # Don't prevent this notification from being sent later on in case someone subscribes to the team.  
+        if len(recipient_list) > 0:
+            date_and_time = datetime.datetime.now()
+            transaction_ids_file.write(transaction_id + ',' + str(date_and_time) + '\n')
 
 # Assemble the list of transaction IDs that have already been published.
 def update_transaction_ids_file():
@@ -476,7 +497,7 @@ def update_transaction_ids_file():
 
 # This method examines each of the 50 most recent entries in the EliteProspects RSS transaction for mentions of NCAA D1 hockey teams.
 def process_feed(transaction_ids_list, server, cursor):
-    # Query the EliteProspects transfers RSS feed.
+    # Load the EliteProspects transfers RSS feed.
     feed = feedparser.parse('https://www.eliteprospects.com/rss/transfers')
 
     if len(feed) == 0:
@@ -494,19 +515,19 @@ def process_feed(transaction_ids_list, server, cursor):
 
         teams_ids = re.findall(r'<a href="https:\/\/www\.eliteprospects\.com\/team\/(\d*)\/', decoded_description)
 
-        # Only pass send_transaction_email() a team ID which correspond to an NCAA D1 team.
+        # Only pass team IDs which correspond to an NCAA D1 team.
         ncaa_d1_team_ids = []
         for team_id in teams_ids:
             if team_id in ep_team_ids_to_name:
                 # The current team_id corresponds to an NCAA D1 team.
                 ncaa_d1_team_ids.append(team_id)
 
-        # Send an email notification as long as the transaction one NCAA D1 team. If there's two, skip it because it'll be handled when looking at transfer portal spreadsheets.
+        # Send an email/text message notification when the transaction involves one NCAA D1 team. If there's two, skip it because it'll
+        # be handled when looking at transfer portal spreadsheets.
         if len(ncaa_d1_team_ids) == 1:
             print(item.title)
             print(decoded_description)
-
-            send_transaction_email(transaction_id, item.title, decoded_description, ncaa_d1_team_ids[0], server, cursor)
+            send_transaction_notification(transaction_id, item.title, decoded_description, ncaa_d1_team_ids[0], server, cursor)
 
 def main():
     # Connect to the Gmail server using TLS encryption.
@@ -527,11 +548,12 @@ def main():
     # Monitor online transfer portal spreadsheets for transfers involving two NCAA D1 teams.
     rink_live_portal_data = get_portal_spreadsheet_data(rink_live_spreadsheet_id, rink_live_tab_name)
     gopher_puck_live_portal_data = get_portal_spreadsheet_data(gopher_puck_live_shreadsheet_id, gopher_puck_live_tab_name)
+    college_hockey_insider_portal_data = get_portal_spreadsheet_data(college_hockey_insider_spreadsheet_id, college_hockey_insider_tab_name)
 
-    db_team_names = list(ep_team_ids_to_name.values())
+    process_portal_spreadsheet(rink_live_portal_data, 2, 1, 0, 11)
+    process_portal_spreadsheet(gopher_puck_live_portal_data, 1, 2, 1, 5)
+    process_portal_spreadsheet(college_hockey_insider_portal_data, 19, 7, 1, 10)
 
-    process_portal_spreadsheet(rink_live_portal_data, db_team_names, 2, 1, 6, 0, 11, 15)
-    process_portal_spreadsheet(gopher_puck_live_portal_data, db_team_names, 1, 2, 3, 1, 5, 0)
     construct_and_send_transfer_message(server, cursor)
 
     # Close the connection to the database and Gmail server.

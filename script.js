@@ -21,18 +21,48 @@ function clickTeam(team) {
     document.getElementById('submit').value = selectedTeams.toString();
 }
 
-// Check the email submission text box for a valid email.
-function checkEmail(element) {
-    let re = new RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]{2,})$/);
+// Check the validity of the email or phone number submission text box.
+function checkContactMethod(element) {
+    let re;
 
+    // If the email text box was passed in, enforce the email address regular expression. Otherwise, the
+    // phone number text box was passed in, so enforce the phone number regular expression.
+    if (element.id == 'email text box') {
+        re = new RegExp(/^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]{2,})$/);
+    }
+    else {
+        re = new RegExp(/^[\d]{10}$/);
+    }
+
+    // If the entered text is valid, change the box's color to green and enable the 'Submit' button.
+    // Otherwise, it's invalid, so change the color to red and disable the 'Submit' button.
     if (element.value.search(re) >= 0) {
-        // If the email address entered is valid, change the box's color to green and enable the "Submit" button.
         element.style.backgroundColor = 'lightgreen';
         document.getElementById('submit').disabled = false;
     }
     else {
-        // If the email address entered is invalid, change the box's color to red and disable the "Submit" button.
-        element.style.backgroundColor = 'lightcoral';
+        element.style.backgroundColor = '#ffb3b3';
         document.getElementById('submit').disabled = true;
+    }
+}
+
+// Check which radio button was clicked, enable it's respective text box in the DOM, and disable the other.
+function radioButtonOnClick(element) {
+    // No matter which button was clicked, un-hide the submit button and clear both text boxes of any text.
+    document.getElementById('submit').hidden = false;
+    document.getElementById('email text box').value = '';
+    document.getElementById('phone number text box').value = '';
+
+    // Depending on which radio button was passed in ('Email' or 'Text Message'), check the corresponding
+    // text box text for compliance with the corresponding regular expression.
+    if (element.id == 'email radio button') {
+        checkContactMethod(document.getElementById('email text box'));
+        document.getElementById('email text box div').hidden = false;
+        document.getElementById('phone number text box div').hidden = true;
+    }
+    else {
+        checkContactMethod(document.getElementById('phone number text box'));
+        document.getElementById('phone number text box div').hidden = false;
+        document.getElementById('email text box div').hidden = true;
     }
 }

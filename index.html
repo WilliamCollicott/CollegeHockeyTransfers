@@ -128,7 +128,7 @@
                 <button class="button" id="Western Michigan" onclick="clickTeam(this.id)">Western Michigan</button>
             </div>
             <div id="conference" style="background-color:#bbbbbb8e;">
-                <p style="font-size: 18px;"><b>INDEPENDENTS</b></p>
+                <p style="font-size: 18px;"><b style="font-family: monospace; font-size: 22px;">INDEPENDENTS</b></p>
                 <button class="button" id="Alaska-Anchorage" onclick="clickTeam(this.id)">Alaska-Anchorage</button>
                 <button class="button" id="Alaska-Fairbanks" onclick="clickTeam(this.id)">Alaska-Fairbanks</button>
                 <button class="button" id="Augustana" onclick="clickTeam(this.id)">Augustana</button>
@@ -139,10 +139,22 @@
         </div>
         <form autocomplete="off" action="submit.php" method="post" id="form">
             <div class="section" id="submission">
-                <h2><u>Submission</u></h2>
-                <label><b>EMAIL:</b></label>
-                <input type="email" name="email" style="background-color: lightcoral;width: 250px;" onkeyup="checkEmail(this)" oninput="checkEmail(this)" onpaste="checkEmail(this)" oncut="checkEmail(this)"></input>
-                <button id="submit" type="submit" name="submit" disabled><b>SUBMIT</b></button>
+                <h2><u>How would you like to be notified?</u></h2>
+                <table>
+                    <tr><td><input type="radio" id="email radio button" name="preferred_communication" onclick="radioButtonOnClick(this)"/><label><b style="font-family: monospace; font-size: 18px;"> Email</b></label></td></tr>
+                    <tr><td><input type="radio" id="phone number radio button" name="preferred_communication" onclick="radioButtonOnClick(this)"/><label><b style="font-family: monospace; font-size: 18px;"> Text Message</b></label></td></tr>
+                </table>
+                <br>
+                <div id="email text box div" hidden>
+                    <label><b style="font-family: monospace; font-size: 18px;">EMAIL ADDRESS:</b></label>
+                    <input id="email text box" type="email" name="email" style="background-color: #ffb3b3;width: 250px;" onkeyup="checkContactMethod(this)" oninput="checkContactMethod(this)" onpaste="checkContactMethod(this)" oncut="checkContactMethod(this)"></input>
+                </div>
+                <div id="phone number text box div" hidden>
+                    <label><b style="font-family: monospace; font-size: 18px;">PHONE NUMBER:</b></label>
+                    <input id="phone number text box" name="phone_number" placeholder="enter 10 digits, no parentheses or dashes" style="background-color: #ffb3b3;width: 250px;" onkeyup="checkContactMethod(this)" oninput="checkContactMethod(this)" onpaste="checkContactMethod(this)" oncut="checkContactMethod(this)"></input>
+                </div>
+                <br>
+                <button id="submit" type="submit" name="submit" hidden disabled><b>SUBMIT</b></button>
             </div>
         </form>
         <div class="section">

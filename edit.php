@@ -9,6 +9,7 @@
     global $teams;
 
     $email = trim($_GET['email']);
+    $phoneNumber = trim($_GET['phoneNumber']);
     $uuid = trim($_GET['uuid']);
 
     // Connect to the database
@@ -18,21 +19,34 @@
     if ($mysqli->connect_errno) {
         $mysqli->close();
         echo "<script type='text/javascript'>alert('There was a problem accessing the database. Please try again. If the problem persists, please try again later.');</script>";
-        echo "<script>window.top.location='main.html'</script>";
+        echo "<script>window.top.location='index.html'</script>";
         return;
     }
 
-    $getTeamsStatement = $mysqli->prepare("SELECT TeamName FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Email AS E ON E.Id = S.EmailId WHERE Email = ? AND UUID = ?");
-    $getTeamsStatement->bind_param('ss', $email, $uuid);
+    // Depending on if the user signed up for emails or text messages, retrieve the teams they previously selected.
+    if ($email != '') {
+        $getTeamsStatement = $mysqli->prepare("SELECT TeamName FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Contact AS C ON C.Id = S.ContactId WHERE Email = ? AND UUID = ?");
+        $getTeamsStatement->bind_param('ss', $email, $uuid);
+    }
+    else {
+        $getTeamsStatement = $mysqli->prepare("SELECT TeamName FROM Team AS T JOIN Subscription AS S ON S.TeamId = T.Id JOIN Contact AS C ON C.Id = S.ContactId WHERE PhoneNumber = ? AND UUID = ?");
+        $getTeamsStatement->bind_param('is', $phoneNumber, $uuid);
+    }
+
     $getTeamsStatement->execute();
     $result = $getTeamsStatement->get_result();
 
     if ($result->num_rows == 0) {
-        // There's no records to show because the email and UUID pair is not in the database, so alert the user.
-        echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your email in the database.</h2>';
+        // There's no records to show because the email/phone number and UUID pair is not in the database, so alert the user.
+        if ($email != '') {
+            echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your email in the database.</h2>';
+        }
+        else {
+            echo '<h2 style="text-align: center;">Changes cannot be made because there is no reocrd of your phone number in the database.</h2>';
+        }
     }
     else {
-        // The user's email and UUID are in the database, so display a list of all D1 teams and automatically select the ones the user subscribed to.
+        // The user's email/phone number and UUID are in the database, so display a list of all D1 teams and automatically select the ones the user subscribed to.
         $subscribed_teams = array();
         while($row = $result->fetch_row()) {
             array_push($subscribed_teams, $row[0]);
@@ -61,8 +75,14 @@
             echo '</table>';
         }
 
-        // Include a hidden text box for the user's email and UUID so they can be passed to submit_edit.php upon form submission.
-        echo '<input type="hidden" name="email" value="' . $email . '">';
+        // Include a hidden text box for the user's email/phone number and UUID so they can be passed to submit_edit.php upon form submission.
+        if ($email != '') {
+            echo '<input type="hidden" name="email" value="' . $email . '">';
+        }
+        else {
+            echo '<input type="hidden" name="phoneNumber" value="' . $phoneNumber . '">';
+        }
+
         echo '<input type="hidden" name="uuid" value="' . $uuid . '">';
         echo '<br><br><button><b>SUBMIT</b></button></form>';
     }
